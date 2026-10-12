@@ -5,10 +5,60 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoomRole {
+  OWNER
+  MEMBER
 }
 
 model User {
-  id String @id @default(uuid())
+  // Clerk supplies this ID after authentication.
+  id          String   @id
+  displayName String?
+  createdAt   DateTime @default(now())
+
+  roomsCreated Room[]       @relation("RoomCreator")
+  memberships RoomMember[]
+  messages    Message[]
 }
 
-// rooms Model...
+model Room {
+  id          String   @id @default(uuid())
+  name        String
+  createdById String
+  inviteToken String?  @unique
+  createdAt   DateTime @default(now())
+
+  createdBy User         @relation("RoomCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  members   RoomMember[]
+  messages  Message[]
+}
+
+model RoomMember {
+  roomId   String
+  userId   String
+  role     RoomRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  roomId    String
+  authorId  String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([roomId, createdAt, id])
+  @@index([authorId])
+}
