@@ -1,43 +1,41 @@
-import express from "express";
-import { clerkMiddleware } from "@clerk/express";
-import { neon } from "@neondatabase/serverless";
-import cors from "cors";
 import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { clerkMiddleware } from "@clerk/express";
+
+import prisma from "./config/db.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(cors({
   origin: "http://localhost:5173",
-  credentials: true
+  credentials: true,
 }));
 
 app.use(express.json());
 app.use(clerkMiddleware());
 
-// Neon PostgreSQL connection
-const sql = neon(process.env.DATABASE_URL);
+app.use("/api/users", userRoutes);
 
-// Test database connection
+// Check the database connection through Prisma.
 app.get("/test-db", async (req, res) => {
   try {
-    const result = await sql`SELECT version()`;
+    await prisma.$connect();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Database connected successfully",
-      version: result[0].version
     });
-  } catch (error) {
-    console.error("Database error:", error);
+  } catch {
+    console.error("Database connection failed.");
 
-    res.status(500).json({
-      message: "Database connection failed"
+    return res.status(500).json({
+      message: "Database connection failed",
     });
   }
 });
 
-// Start Express server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} 💮`);
 });

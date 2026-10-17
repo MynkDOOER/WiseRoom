@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -20,8 +20,8 @@ model User {
   createdAt   DateTime @default(now())
 
   roomsCreated Room[]       @relation("RoomCreator")
-  memberships RoomMember[]
-  messages    Message[]
+  memberships  RoomMember[]
+  messages     Message[]
 }
 
 model Room {
