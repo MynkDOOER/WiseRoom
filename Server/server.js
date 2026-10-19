@@ -5,6 +5,9 @@ import { clerkMiddleware } from "@clerk/express";
 
 import prisma from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
+import roomRoutes from "./routes/roomRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import errorHandler from "./middlewares/errorMiddleware.js";
 
 const app = express();
 const PORT = 3000;
@@ -18,6 +21,8 @@ app.use(express.json());
 app.use(clerkMiddleware());
 
 app.use("/api/users", userRoutes);
+app.use("/api/rooms/:roomId/messages", messageRoutes);
+app.use("/api/rooms", roomRoutes);
 
 // Check the database connection through Prisma.
 app.get("/test-db", async (req, res) => {
@@ -35,6 +40,8 @@ app.get("/test-db", async (req, res) => {
     });
   }
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} 💮`);
