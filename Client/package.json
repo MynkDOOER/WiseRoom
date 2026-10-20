@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.10",
     "@clerk/react": "^6.16.1",
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@hugeicons/react": "^1.1.10",
     "clear": "^0.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

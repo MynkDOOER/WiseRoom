@@ -21,9 +21,9 @@ export const ensureMembership = async (roomId, userId) => {
   }
 };
 
-export const deleteMembership = async (roomId, userId) => {
+export const deleteMembership = async (roomId, userId, db = prisma) => {
   // Guard against deleting an owner even if a caller bypassed a service check.
-  return prisma.roomMember.deleteMany({ where: { roomId, userId, role: "MEMBER" } });
+  return db.roomMember.deleteMany({ where: { roomId, userId, role: "MEMBER" } });
 };
 
 export const findMembersByRoom = async (roomId) => {

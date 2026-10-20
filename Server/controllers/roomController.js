@@ -47,7 +47,7 @@ export const listMembers = async (req, res, next) => {
 
 export const getRoomInvite = async (req, res, next) => {
   try {
-    const inviteToken = await getInviteForOwner(req.userId, req.params.roomId);
-    return res.json({ success: true, inviteToken });
+    const invite = await getInviteForOwner(req.userId, req.params.roomId);
+    return res.json({ success: true, invite });
   } catch (error) { next(error); }
 };

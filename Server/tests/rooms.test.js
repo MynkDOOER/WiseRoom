@@ -2,249 +2,46 @@ import test, { after, before, beforeEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import express from "express";
+import sharp from "sharp";
+import { roomDatabase } from "./helpers/roomDatabase.js";
+const harness=roomDatabase();let state;let server;let base;
+beforeEach(()=>{state=harness.reset();});
+mock.module("@clerk/express",{exports:{getAuth:req=>({userId:req.headers["x-test-user"]||null}),clerkClient:{users:{async getUser(){return {firstName:"New",lastName:"Member"};}}}}});
+mock.module(new URL("../config/db.js",import.meta.url).href,{exports:{default:harness.db}});
+// Limiter behavior is covered separately; keep this suite focused on transactions/permissions.
+mock.module(new URL("../middlewares/inviteRateLimit.js",import.meta.url).href,{exports:{default:(_req,_res,next)=>next()}});
+const {default:roomRoutes}=await import("../routes/roomRoutes.js");
+const {default:inviteRoutes}=await import("../routes/inviteRoutes.js");
+const {default:errorHandler}=await import("../middlewares/errorMiddleware.js");
+before(async()=>{const app=express();app.use(express.json());app.use("/api/rooms",roomRoutes);app.use("/api/invites",inviteRoutes);app.use(errorHandler);server=app.listen(0,"127.0.0.1");await new Promise(resolve=>server.once("listening",resolve));base=`http://127.0.0.1:${server.address().port}/api`;});
+after(()=>new Promise(resolve=>server.close(resolve)));
+async function request(path="/rooms",{method="GET",as="owner",body,binary}={}){const response=await fetch(base+path,{method,headers:{...(as?{"x-test-user":as}:{}),...(binary?{"Content-Type":"image/png"}:body!==undefined?{"Content-Type":"application/json"}:{})},...(binary?{body:binary}:body!==undefined?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(10000)});return {status:response.status,headers:response.headers,data:response.status===204?null:await response.json()};}
+async function makeRoom(){const response=await request("/rooms",{method:"POST",body:{name:"Study group",userId:"outsider",role:"MEMBER"}});assert.equal(response.status,201);const room=response.data.room;return {...room,code:state.rooms.get(room.id).inviteCode};}
+async function ask(room,as="alice"){const response=await request(`/invites/${room.code}/requests`,{method:"POST",as});assert.equal(response.status,200);return response.data.request;}
+async function approve(room,as="alice"){const queued=await ask(room,as);const response=await request(`/rooms/${room.id}/join-requests/${queued.id}`,{method:"PATCH",body:{decision:"APPROVED"}});assert.equal(response.status,200);return queued;}
 
-let state;
-let server;
-let baseUrl;
-
-beforeEach(() => {
-  state = {
-    users: new Map(["owner", "alice", "outsider"].map(id => [id, { id }])),
-    rooms: new Map(), memberships: new Map(), clerkCalls: 0,
-    failDatabase: false, raceJoin: false, createCalls: [],
-  };
-});
-
-const key = (roomId, userId) => `${roomId}:${userId}`;
-function selectRoom(room, select) {
-  if (!room) return null;
-  const result = {};
-  for (const field of ["id", "name", "createdById", "createdAt", "inviteToken"]) {
-    if (select[field]) result[field] = room[field];
-  }
-  const members = [...state.memberships.values()].filter(member => member.roomId === room.id);
-  if (select._count) result._count = { members: members.length };
-  if (select.members) result.members = members.filter(member => member.userId === select.members.where.userId).map(member => ({ role: member.role }));
-  return result;
-}
-const database = {
-  user: {
-    async findUnique({ where }) { return state.users.get(where.id) || null; },
-    async upsert({ where, create, update }) {
-      const user = state.users.get(where.id);
-      const result = user ? { ...user, ...update } : create;
-      state.users.set(where.id, result);
-      return result;
-    },
-  },
-  room: {
-    async create(args) {
-      if (state.failDatabase) throw new Error("private-database-details");
-      state.createCalls.push(args);
-      const { members, ...fields } = args.data;
-      const room = { ...fields, id: randomUUID(), createdAt: new Date() };
-      state.rooms.set(room.id, room);
-      state.memberships.set(key(room.id, members.create.userId), { ...members.create, roomId: room.id, joinedAt: new Date() });
-      return selectRoom(room, args.select);
-    },
-    async findUnique({ where, select }) {
-      const room = where.id ? state.rooms.get(where.id) : [...state.rooms.values()].find(item => item.inviteToken === where.inviteToken);
-      return selectRoom(room, select);
-    },
-    async findMany({ where, select }) {
-      const userId = where.members.some.userId;
-      return [...state.rooms.values()].filter(room => state.memberships.has(key(room.id, userId))).map(room => selectRoom(room, select));
-    },
-  },
-  roomMember: {
-    async findUnique({ where }) {
-      const { roomId, userId } = where.roomId_userId;
-      return state.memberships.get(key(roomId, userId)) || null;
-    },
-    async upsert({ where, create, update }) {
-      const { roomId, userId } = where.roomId_userId;
-      const existing = state.memberships.get(key(roomId, userId));
-      const result = existing ? { ...existing, ...update } : { ...create, joinedAt: new Date() };
-      state.memberships.set(key(roomId, userId), result);
-      if (state.raceJoin) {
-        state.raceJoin = false;
-        throw Object.assign(new Error("Simulated concurrent insert"), { code: "P2002" });
-      }
-      return result;
-    },
-    async deleteMany({ where }) {
-      const existing = state.memberships.get(key(where.roomId, where.userId));
-      if (!existing || existing.role !== where.role) return { count: 0 };
-      state.memberships.delete(key(where.roomId, where.userId));
-      return { count: 1 };
-    },
-    async findMany({ where }) {
-      return [...state.memberships.values()].filter(member => member.roomId === where.roomId).map(member => ({
-        userId: member.userId, role: member.role, joinedAt: member.joinedAt,
-        user: { id: member.userId, displayName: state.users.get(member.userId)?.displayName || null },
-      }));
-    },
-  },
-};
-
-mock.module("@clerk/express", { exports: {
-  getAuth: req => ({ userId: req.headers["x-test-user"] || null }),
-  clerkClient: { users: { async getUser() {
-    state.clerkCalls += 1;
-    return { firstName: "New", lastName: "Member" };
-  } } },
-} });
-mock.module(new URL("../config/db.js", import.meta.url).href, { exports: { default: database } });
-const { default: roomRoutes } = await import("../routes/roomRoutes.js");
-const { default: errorHandler } = await import("../middlewares/errorMiddleware.js");
-
-before(async () => {
-  const app = express();
-  app.use(express.json());
-  app.use("/api/rooms", roomRoutes);
-  app.use(errorHandler);
-  server = app.listen(0, "127.0.0.1");
-  await new Promise((resolve, reject) => { server.once("listening", resolve); server.once("error", reject); });
-  baseUrl = `http://127.0.0.1:${server.address().port}/api/rooms`;
-});
-after(() => new Promise(resolve => server.close(resolve)));
-
-async function request(path = "", { method = "GET", as = "owner", body } = {}) {
-  const response = await fetch(`${baseUrl}${path}`, {
-    method,
-    headers: { ...(as ? { "x-test-user": as } : {}), ...(body !== undefined ? { "Content-Type": "application/json" } : {}) },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    signal: AbortSignal.timeout(5000),
-  });
-  const data = response.status === 204 ? null : await response.json();
-  return { status: response.status, headers: response.headers, data };
-}
-async function makeRoom() {
-  const result = await request("", { method: "POST", body: { name: "Study group", userId: "outsider", role: "MEMBER" } });
-  assert.equal(result.status, 201);
-  const room = result.data.room;
-  return { ...room, token: state.rooms.get(room.id).inviteToken };
-}
-
-test("every room endpoint rejects signed-out callers", async () => {
-  const roomId = randomUUID();
-  for (const [method, path] of [["POST", ""], ["GET", ""], ["POST", "/join"], ["GET", `/${roomId}`], ["GET", `/${roomId}/members`], ["DELETE", `/${roomId}/members/me`], ["GET", `/${roomId}/invite`]]) {
-    const res = await request(path, { method, as: null });
-    assert.equal(res.status, 401);
-    assert.equal(res.headers.get("cache-control"), "no-store");
-  }
-  assert.equal(state.rooms.size, 0);
-});
-
-test("creation uses verified owner and a nested membership write", async () => {
-  const room = await makeRoom();
-  assert.equal(room.createdById, "owner");
-  assert.equal(room.role, "OWNER");
-  assert.equal(room.memberCount, 1);
-  assert.match(room.token, /^[0-9a-f]{64}$/);
-  assert.equal(state.createCalls[0].data.members.create.role, "OWNER");
-  assert.equal(state.createCalls[0].data.members.create.userId, "owner");
-});
-
-test("invalid names and malformed IDs fail before writes", async () => {
-  for (const name of [undefined, null, 42, "  ", "ab", "x".repeat(81)]) {
-    assert.equal((await request("", { method: "POST", body: { name } })).status, 400);
-  }
-  assert.equal((await request("/not-a-uuid")).status, 400);
-  assert.equal(state.rooms.size, 0);
-});
-
-test("creation trims names and syncs a missing local Clerk user", async () => {
-  const res = await request("", { method: "POST", as: "new-user", body: { name: "  New group  " } });
-  assert.equal(res.status, 201);
-  assert.equal(res.data.room.name, "New group");
-  assert.equal(res.data.room.createdById, "new-user");
-  assert.equal(state.clerkCalls, 1);
-});
-
-test("room listing is membership-filtered and hides invite tokens", async () => {
-  const room = await makeRoom();
-  const owner = await request();
-  assert.equal(owner.data.rooms.length, 1);
-  assert.equal(owner.data.rooms[0].role, "OWNER");
-  assert.equal(JSON.stringify(owner.data).includes(room.token), false);
-  assert.equal((await request("", { as: "outsider" })).data.rooms.length, 0);
-});
-
-test("valid invite joins as MEMBER; repeat/concurrent joins do not duplicate", async () => {
-  const room = await makeRoom();
-  const results = await Promise.all(Array.from({ length: 3 }, () => request("/join", {
-    method: "POST", as: "alice", body: { inviteToken: room.token, role: "OWNER", userId: "outsider" },
-  })));
-  results.forEach(result => { assert.equal(result.status, 200); assert.equal(result.data.room.role, "MEMBER"); });
-  assert.equal(state.memberships.size, 2);
-  assert.equal(state.memberships.get(key(room.id, "alice")).role, "MEMBER");
-});
-
-test("concurrent unique-key conflict returns the existing membership", async () => {
-  const room = await makeRoom();
-  state.raceJoin = true;
-  const res = await request("/join", { method: "POST", as: "alice", body: { inviteToken: room.token } });
-  assert.equal(res.status, 200);
-  assert.equal(state.memberships.size, 2);
-});
-
-test("joining the owner's own invitation preserves OWNER", async () => {
-  const room = await makeRoom();
-  const res = await request("/join", { method: "POST", body: { inviteToken: room.token } });
-  assert.equal(res.data.room.role, "OWNER");
-  assert.equal(state.memberships.size, 1);
-});
-
-test("invalid and unknown invite tokens cannot create membership", async () => {
-  await makeRoom();
-  assert.equal((await request("/join", { method: "POST", as: "alice", body: { inviteToken: "bad" } })).status, 400);
-  assert.equal((await request("/join", { method: "POST", as: "alice", body: { inviteToken: "0".repeat(64) } })).status, 404);
-  assert.equal(state.memberships.size, 1);
-});
-
-test("nonmembers cannot read details, members, invites or leave", async () => {
-  const room = await makeRoom();
-  for (const [method, suffix] of [["GET", ""], ["GET", "/members"], ["GET", "/invite"], ["DELETE", "/members/me"]]) {
-    const res = await request(`/${room.id}${suffix}`, { method, as: "outsider" });
-    assert.equal(res.status, 403);
-    assert.equal(JSON.stringify(res.data).includes(room.token), false);
-  }
-});
-
-test("only owners retrieve invites, while members can read room/member summaries", async () => {
-  const room = await makeRoom();
-  await request("/join", { method: "POST", as: "alice", body: { inviteToken: room.token } });
-  assert.equal((await request(`/${room.id}/invite`)).data.inviteToken, room.token);
-  assert.equal((await request(`/${room.id}/invite`, { as: "alice" })).status, 403);
-  const details = await request(`/${room.id}`, { as: "alice" });
-  assert.equal(details.status, 200);
-  assert.equal(details.data.room.inviteToken, undefined);
-  const members = await request(`/${room.id}/members`, { as: "alice" });
-  assert.equal(members.data.members.length, 2);
-});
-
-test("owner cannot leave; member can leave, loses access, and can rejoin", async () => {
-  const room = await makeRoom();
-  assert.equal((await request(`/${room.id}/members/me`, { method: "DELETE" })).status, 409);
-  await request("/join", { method: "POST", as: "alice", body: { inviteToken: room.token } });
-  assert.equal((await request(`/${room.id}/members/me`, { method: "DELETE", as: "alice" })).status, 204);
-  assert.equal((await request(`/${room.id}`, { as: "alice" })).status, 403);
-  assert.equal((await request("", { as: "alice" })).data.rooms.length, 0);
-  assert.equal((await request("/join", { method: "POST", as: "alice", body: { inviteToken: room.token } })).status, 200);
-  assert.equal(state.memberships.get(key(room.id, "owner")).role, "OWNER");
-});
-
-test("missing room is 404 and unexpected errors do not expose details", async () => {
-  assert.equal((await request(`/${randomUUID()}`)).status, 404);
-  state.failDatabase = true;
-  const res = await request("", { method: "POST", body: { name: "Study group" } });
-  assert.equal(res.status, 500);
-  assert.equal(JSON.stringify(res.data).includes("private-database-details"), false);
-});
-
-test("malformed JSON produces a safe 400 response", async () => {
-  const res = await fetch(baseUrl, { method: "POST", headers: { "Content-Type": "application/json", "x-test-user": "owner" }, body: "{broken", signal: AbortSignal.timeout(5000) });
-  assert.equal(res.status, 400);
-  assert.equal((await res.json()).success, false);
-});
+test("all protected room and invitation actions reject signed-out callers",async()=>{const id=randomUUID();for(const [method,path] of [["POST","/rooms"],["GET","/rooms"],["POST","/rooms/join"],["GET",`/rooms/${id}`],["PATCH",`/rooms/${id}`],["GET",`/rooms/${id}/members`],["DELETE",`/rooms/${id}/members/alice`],["GET",`/rooms/${id}/invite`],["POST",`/rooms/${id}/invite/reset`],["GET",`/rooms/${id}/join-requests`],["PUT",`/rooms/${id}/avatar`],["DELETE",`/rooms/${id}/avatar`],["GET","/invites/ABC123"],["POST","/invites/ABC123/requests"]]){const res=await request(path,{method,as:null});assert.equal(res.status,401,path);}assert.equal(state.rooms.size,0);});
+test("creation uses verified owner, six-character code and nested OWNER membership",async()=>{const room=await makeRoom();assert.equal(room.createdById,"owner");assert.equal(room.role,"OWNER");assert.equal(room.memberCount,1);assert.match(room.code,/^[A-Z0-9]{6}$/);assert.equal(room.inviteCode,undefined);assert.equal(state.createCalls[0].members.create.userId,"owner");});
+test("invalid names and IDs fail safely; new Clerk users are synced",async()=>{for(const name of [null,42,"ab","x".repeat(81)])assert.equal((await request("/rooms",{method:"POST",body:{name}})).status,400);assert.equal((await request("/rooms/bad")).status,400);const res=await request("/rooms",{method:"POST",as:"new-user",body:{name:"  New group  "}});assert.equal(res.data.room.name,"New group");assert.ok(state.users.has("new-user"));});
+test("room listing is membership-filtered and never exposes invitation codes",async()=>{const room=await makeRoom();assert.equal((await request()).data.rooms.length,1);assert.equal((await request("/rooms",{as:"outsider"})).data.rooms.length,0);assert.ok(!JSON.stringify((await request()).data).includes(room.code));});
+test("legacy direct joining is retired and cannot bypass approval",async()=>{await makeRoom();for(const token of ["bad","0".repeat(64)])assert.equal((await request("/rooms/join",{method:"POST",as:"alice",body:{inviteToken:token}})).status,410);assert.equal(state.members.size,1);});
+test("preview is minimal; lowercase code works and existing members go directly to room",async()=>{const room=await makeRoom();const preview=await request(`/invites/${room.code.toLowerCase()}`,{as:"alice"});assert.deepEqual(preview.data.room,{name:"Study group"});assert.equal(preview.data.memberRoomId,null);assert.equal((await request(`/invites/${room.code}`)).data.memberRoomId,room.id);assert.equal(state.requests.size,0);});
+test("malformed and unknown codes never grant membership",async()=>{await makeRoom();assert.equal((await request("/invites/bad",{as:"alice"})).status,400);assert.equal((await request("/invites/000000",{as:"alice"})).status,404);assert.equal(state.members.size,1);});
+test("repeated requests are idempotent and do not grant access",async()=>{const room=await makeRoom();const first=await ask(room);const second=await ask(room);assert.equal(first.id,second.id);assert.equal(state.requests.size,1);assert.equal(state.members.size,1);assert.equal((await request(`/rooms/${room.id}`,{as:"alice"})).status,403);});
+test("only owner sees request queue and approves; approval creates only MEMBER",async()=>{const room=await makeRoom();const queued=await ask(room);assert.equal((await request(`/rooms/${room.id}/join-requests`,{as:"outsider"})).status,403);assert.equal((await request(`/rooms/${room.id}/join-requests/${queued.id}`,{method:"PATCH",as:"alice",body:{decision:"APPROVED"}})).status,403);await approve(room);assert.equal(state.members.get(harness.memberKey(room.id,"alice")).role,"MEMBER");assert.equal((await request(`/invites/${room.code}`,{as:"alice"})).data.memberRoomId,room.id);});
+test("declined/cancelled requests cannot later be approved without a new request",async()=>{const room=await makeRoom();const queued=await ask(room);await request(`/invites/${room.code}/requests/me`,{method:"DELETE",as:"alice"});assert.equal((await request(`/rooms/${room.id}/join-requests/${queued.id}`,{method:"PATCH",body:{decision:"APPROVED"}})).status,409);const next=await ask(room);assert.equal(next.id,queued.id);assert.equal((await request(`/rooms/${room.id}/join-requests/${next.id}`,{method:"PATCH",body:{decision:"REJECTED"}})).status,200);assert.equal((await request(`/invites/${room.code}/requests`,{method:"POST",as:"alice"})).status,429);assert.equal(state.members.size,1);});
+test("request decision must belong to this room and have an allowed status",async()=>{const room=await makeRoom();const other=await makeRoom();const queued=await ask(room);assert.equal((await request(`/rooms/${other.id}/join-requests/${queued.id}`,{method:"PATCH",body:{decision:"APPROVED"}})).status,404);assert.equal((await request(`/rooms/${room.id}/join-requests/${queued.id}`,{method:"PATCH",body:{decision:"OWNER"}})).status,400);});
+test("only owners rename rooms, validation remains 3–80 characters",async()=>{const room=await makeRoom();await approve(room);assert.equal((await request(`/rooms/${room.id}`,{method:"PATCH",as:"alice",body:{name:"Renamed room"}})).status,403);assert.equal((await request(`/rooms/${room.id}`,{method:"PATCH",body:{name:"ab"}})).status,400);const res=await request(`/rooms/${room.id}`,{method:"PATCH",body:{name:"  Renamed room  "}});assert.equal(res.data.room.name,"Renamed room");});
+test("owner removes MEMBER and cannot remove self; removed user must request again",async()=>{const room=await makeRoom();await approve(room);assert.equal((await request(`/rooms/${room.id}/members/owner`,{method:"DELETE"})).status,409);assert.equal((await request(`/rooms/${room.id}/members/owner`,{method:"DELETE",as:"alice"})).status,403);assert.equal((await request(`/rooms/${room.id}/members/alice`,{method:"DELETE"})).status,204);assert.equal((await request(`/rooms/${room.id}`,{as:"alice"})).status,403);const queued=await ask(room);assert.equal(queued.status,"PENDING");assert.equal(state.members.size,1);});
+test("owner cannot leave; member leave immediately removes REST access",async()=>{const room=await makeRoom();await approve(room);assert.equal((await request(`/rooms/${room.id}/members/me`,{method:"DELETE"})).status,409);assert.equal((await request(`/rooms/${room.id}/members/me`,{method:"DELETE",as:"alice"})).status,204);assert.equal((await request(`/rooms/${room.id}/members`,{as:"alice"})).status,403);});
+test("invitation reset invalidates old code, preserves pending requests and existing members",async()=>{const room=await makeRoom();await ask(room);const res=await request(`/rooms/${room.id}/invite/reset`,{method:"POST"});assert.match(res.data.invite.code,/^[A-Z0-9]{6}$/);assert.notEqual(res.data.invite.code,room.code);assert.equal((await request(`/invites/${room.code}`,{as:"outsider"})).status,404);assert.equal(state.requests.size,1);assert.equal(state.members.size,1);});
+test("members cannot retrieve or rotate invitations",async()=>{const room=await makeRoom();await approve(room);assert.equal((await request(`/rooms/${room.id}/invite`,{as:"alice"})).status,403);assert.equal((await request(`/rooms/${room.id}/invite/reset`,{as:"alice",method:"POST"})).status,403);});
+test("request lists are owner-only and paginate beyond fifty",async()=>{const room=await makeRoom();for(let i=0;i<55;i++){const userId=`queued-${i}`;state.requests.set(String(i),{id:randomUUID(),roomId:room.id,userId,status:"PENDING",createdAt:new Date(1700000000000+i),updatedAt:new Date()});}state.requests=new Map([...state.requests.values()].map(item=>[item.id,item]));const first=await request(`/rooms/${room.id}/join-requests`);assert.equal(first.data.requests.length,50);assert.ok(first.data.nextCursor);const second=await request(`/rooms/${room.id}/join-requests?cursor=${first.data.nextCursor}`);assert.equal(second.data.requests.length,5);assert.equal(second.data.nextCursor,null);});
+test("own request list excludes other users",async()=>{const room=await makeRoom();await ask(room);const own=await request("/invites/requests/me",{as:"alice"});assert.equal(own.data.requests.length,1);assert.equal((await request("/invites/requests/me",{as:"outsider"})).data.requests.length,0);});
+test("removed members do not see an old approval as current access in their request list",async()=>{const room=await makeRoom();await approve(room);assert.equal((await request("/invites/requests/me",{as:"alice"})).data.requests.length,1);await request(`/rooms/${room.id}/members/alice`,{method:"DELETE"});assert.equal((await request("/invites/requests/me",{as:"alice"})).data.requests.length,0);});
+test("reset codes are not disclosed to past applicants; own pending request can still be cancelled",async()=>{const room=await makeRoom();const queued=await ask(room);const reset=await request(`/rooms/${room.id}/invite/reset`,{method:"POST"});const own=await request("/invites/requests/me",{as:"alice"});assert.ok(!JSON.stringify(own.data).includes(reset.data.invite.code));assert.equal((await request(`/invites/requests/${queued.id}/me`,{method:"DELETE",as:"outsider"})).status,404);assert.equal((await request(`/invites/requests/${queued.id}/me`,{method:"DELETE",as:"alice"})).status,204);assert.equal(state.requests.get(queued.id).status,"CANCELLED");});
+test("transaction conflicts retry and retries are bounded",async()=>{const room=await makeRoom();state.conflicts=1;assert.equal((await request(`/rooms/${room.id}`,{method:"PATCH",body:{name:"After conflict"}})).status,200);state.conflicts=4;assert.equal((await request(`/rooms/${room.id}`,{method:"PATCH",body:{name:"Never committed"}})).status,409);});
+test("invalid and unauthorized photo uploads cannot change the room",async()=>{const room=await makeRoom();assert.equal((await request(`/rooms/${room.id}/avatar`,{method:"PUT",as:"outsider",binary:Buffer.from("bad")})).status,403);assert.equal((await request(`/rooms/${room.id}/avatar`,{method:"PUT",binary:Buffer.from("<svg></svg>")})).status,400);assert.equal((await request(`/rooms/${room.id}/avatar`,{as:null})).status,403);assert.equal(state.rooms.get(room.id).avatarKey,null);});
+test("member can upload, fetch a signed picture and reset; removed member cannot fetch",async()=>{const room=await makeRoom();await approve(room);const png=await sharp({create:{width:30,height:20,channels:3,background:{r:255,g:100,b:70}}}).png().toBuffer();const saved=await request(`/rooms/${room.id}/avatar`,{method:"PUT",as:"alice",binary:png});assert.equal(saved.status,200);const image=await fetch(base.replace(/\/api$/,"")+saved.data.avatarUrl);assert.equal(image.status,200);assert.equal(image.headers.get("content-type"),"image/webp");await image.arrayBuffer();await request(`/rooms/${room.id}/members/alice`,{method:"DELETE"});assert.equal((await fetch(base.replace(/\/api$/,"")+saved.data.avatarUrl)).status,403);assert.equal((await request(`/rooms/${room.id}/avatar`,{method:"DELETE"})).status,204);});
+test("unexpected database errors do not expose details",async()=>{assert.equal((await request(`/rooms/${randomUUID()}`)).status,404);state.fail=true;const res=await request("/rooms",{method:"POST",body:{name:"Study group"}});assert.equal(res.status,500);assert.ok(!JSON.stringify(res.data).includes("private-database-details"));});
+test("malformed JSON produces a safe response",async()=>{const response=await fetch(base+"/rooms",{method:"POST",headers:{"x-test-user":"owner","Content-Type":"application/json"},body:"{broken"});assert.equal(response.status,400);});

@@ -13,6 +13,13 @@ enum RoomRole {
   MEMBER
 }
 
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 model User {
   // Clerk supplies this ID after authentication.
   id          String   @id
@@ -22,6 +29,8 @@ model User {
   roomsCreated Room[]       @relation("RoomCreator")
   memberships  RoomMember[]
   messages     Message[]
+  joinRequests RoomJoinRequest[] @relation("JoinRequester")
+  decisions    RoomJoinRequest[] @relation("JoinDecider")
 }
 
 model Room {
@@ -29,11 +38,34 @@ model Room {
   name        String
   createdById String
   inviteToken String?  @unique
+  inviteCode  String?  @unique
+  avatarKey   String?
+  avatarUpdatedAt DateTime?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   createdBy User         @relation("RoomCreator", fields: [createdById], references: [id], onDelete: Restrict)
   members   RoomMember[]
   messages  Message[]
+  joinRequests RoomJoinRequest[]
+}
+
+model RoomJoinRequest {
+  id          String @id @default(uuid())
+  roomId      String
+  userId      String
+  status      JoinRequestStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  decidedAt   DateTime?
+  decidedById String?
+  room        Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User @relation("JoinRequester", fields: [userId], references: [id], onDelete: Cascade)
+  decidedBy   User? @relation("JoinDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@unique([roomId, userId])
+  @@index([roomId, status, createdAt, id])
+  @@index([userId, status])
 }
 
 model RoomMember {
@@ -50,6 +82,9 @@ model RoomMember {
 }
 
 model Message {
+  voiceKey String?
+  voiceMime String?
+  voiceDurationMs Int?
   id        String   @id @default(uuid())
   roomId    String
   authorId  String

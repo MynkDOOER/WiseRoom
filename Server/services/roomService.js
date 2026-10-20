@@ -1,14 +1,16 @@
-import { randomBytes } from "node:crypto";
 import prisma from "../config/db.js";
+import { generateInviteCode } from "../utils/inviteCode.js";
+import { transaction } from "../utils/transaction.js";
+import { roomAvatarUrl } from "../utils/avatarAccess.js";
 import AppError from "../utils/AppError.js";
 import { findUserById } from "../repositories/userRepository.js";
 import { syncClerkUser } from "./userService.js";
 import {
   createRoomWithOwner, findRoomsByMember, findRoomById,
-  findRoomByInviteToken, findRoomInvite,
+  findRoomInvite, setRoomCode, updateRoom,
 } from "../repositories/roomRepository.js";
 import {
-  findMembership, ensureMembership, deleteMembership, findMembersByRoom,
+  findMembership, deleteMembership, findMembersByRoom,
 } from "../repositories/membershipRepository.js";
 
 function validateRoomId(roomId) {
@@ -21,7 +23,7 @@ async function ensureLocalUser(userId) {
   if (!(await findUserById(userId))) await syncClerkUser(userId);
 }
 
-function roomSummary(room, role) {
+function roomSummary(room, role, userId) {
   return {
     id: room.id,
     name: room.name,
@@ -29,6 +31,9 @@ function roomSummary(room, role) {
     createdAt: room.createdAt,
     role,
     memberCount: room._count.members,
+    updatedAt: room.updatedAt,
+    avatarUrl: room.avatarKey ? roomAvatarUrl(room.id, userId, room.avatarKey) : null,
+    ...(role === "OWNER" ? { pendingRequestCount: room._count.joinRequests || 0 } : {}),
   };
 }
 
@@ -50,9 +55,9 @@ export const createRoomForUser = async (userId, name) => {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
       const room = await createRoomWithOwner({
-        name: name.trim(), userId, inviteToken: randomBytes(32).toString("hex"),
+        name: name.trim(), userId, inviteCode: generateInviteCode(),
       });
-      return roomSummary(room, "OWNER");
+      return roomSummary(room, "OWNER", userId);
     } catch (error) {
       if (error.code !== "P2002") throw error;
     }
@@ -62,31 +67,22 @@ export const createRoomForUser = async (userId, name) => {
 
 export const getRoomsForUser = async (userId) => {
   const rooms = await findRoomsByMember(userId);
-  return rooms.map(room => roomSummary(room, room.members[0].role));
+  return rooms.map(room => roomSummary(room, room.members[0].role, userId));
 };
 
 export const getRoomForMember = async (userId, roomId) => {
   const { room, membership } = await requireRoomMembership(userId, roomId);
-  return roomSummary(room, membership.role);
+  return roomSummary(room, membership.role, userId);
 };
 
-export const joinRoomByInvite = async (userId, inviteToken) => {
-  if (typeof inviteToken !== "string" || !/^[0-9a-f]{64}$/.test(inviteToken.trim())) {
-    throw new AppError(400, "Paste a valid 64-character invite token.");
-  }
-  const room = await findRoomByInviteToken(inviteToken.trim());
-  if (!room) throw new AppError(404, "This invitation is invalid or no longer available.");
-  await ensureLocalUser(userId);
-  await ensureMembership(room.id, userId);
-  return getRoomForMember(userId, room.id);
-};
+export const joinRoomByInvite = async () => { throw new AppError(410, "Direct joining is no longer available. Open a room invitation and request access."); };
 
 export const leaveRoomForUser = async (userId, roomId) => {
-  const { membership } = await requireRoomMembership(userId, roomId);
-  if (membership.role === "OWNER") {
-    throw new AppError(409, "Owners must keep their membership. Ownership transfer isn't available yet.");
-  }
-  await deleteMembership(roomId, userId);
+  await transaction(async tx => {
+    const { membership } = await requireRoomMembership(userId, roomId, tx);
+    if (membership.role === "OWNER") throw new AppError(409, "Owners must keep their membership. Ownership transfer isn't available yet.");
+    await deleteMembership(roomId, userId, tx);
+  });
 };
 
 export const getMembersForRoom = async (userId, roomId) => {
@@ -94,10 +90,31 @@ export const getMembersForRoom = async (userId, roomId) => {
   return findMembersByRoom(roomId);
 };
 
-export const getInviteForOwner = async (userId, roomId) => {
-  const { membership } = await requireRoomMembership(userId, roomId);
-  if (membership.role !== "OWNER") throw new AppError(403, "Only the owner can retrieve this invitation.");
-  const room = await findRoomInvite(roomId);
-  if (!room?.inviteToken) throw new AppError(404, "This room has no active invitation.");
-  return room.inviteToken;
+export const requireRoomOwner = async (userId, roomId, db = prisma) => {
+  const access = await requireRoomMembership(userId, roomId, db);
+  if (access.membership.role !== "OWNER" || access.room.createdById !== userId) throw new AppError(403, "Only the room owner can do this.");
+  return access;
+};
+
+export const getInviteForOwner = async (userId, roomId, reset = false) => transaction(async tx => {
+  await requireRoomOwner(userId, roomId, tx);
+  const current = await findRoomInvite(roomId, tx);
+  let code = current.inviteCode;
+  if (!code || reset) { do { code = generateInviteCode(); } while (code === current.inviteCode); await setRoomCode(roomId, code, tx); }
+  return { code, path: `/join/${code}` };
+});
+
+export const renameRoomForOwner = async (userId, roomId, name) => {
+  if (typeof name !== "string" || name.trim().length < 3 || name.trim().length > 80) throw new AppError(400, "Room names must contain 3 to 80 characters.");
+  return transaction(async tx => { await requireRoomOwner(userId, roomId, tx); return roomSummary(await updateRoom(roomId, { name: name.trim() }, tx), "OWNER", userId); });
+};
+
+export const removeMemberForOwner = async (userId, roomId, targetId) => {
+  if (typeof targetId !== "string" || !targetId || targetId.length > 200) throw new AppError(400, "Invalid member.");
+  return transaction(async tx => {
+    await requireRoomOwner(userId, roomId, tx);
+    const target = await findMembership(roomId, targetId, tx);
+    if (target?.role === "OWNER" || targetId === userId) throw new AppError(409, "The room owner cannot be removed.");
+    await deleteMembership(roomId, targetId, tx);
+  });
 };

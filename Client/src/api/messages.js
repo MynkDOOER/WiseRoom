@@ -34,3 +34,22 @@ export const getMessages = async (token, roomId, { before, limit = 30, signal } 
 export const sendMessage = async (token, roomId, body, { signal } = {}) => {
   return (await request(token, roomId, { method: "POST", body, signal })).message;
 };
+
+export async function sendVoiceMessage(token, roomId, recording, { signal } = {}) {
+  if (!token) throw Object.assign(new Error("Your session expired. Please sign in again."), { status: 401 });
+  const response = await fetch(`${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages/voice?durationMs=${recording.duration}`, {
+    method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": recording.blob.type }, body: recording.blob, signal,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw Object.assign(new Error(data?.message || "Couldn’t send this recording. Try again."), { status: response.status });
+  return data.message;
+}
+export async function loadVoiceMessage(token, roomId, messageId, signal) {
+  if (!token) throw Object.assign(new Error("Your session expired. Please sign in again."), { status: 401 });
+  const response = await fetch(`${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}/voice`, { headers: { Authorization: `Bearer ${token}` }, signal });
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw Object.assign(new Error(data?.message || "Couldn’t load this recording."), { status: response.status });
+  }
+  return response.blob();
+}

@@ -1,4 +1,7 @@
 const paths = {
+  code: <><path d="m8 5-7 7 7 7m8-14 7 7-7 7m-3-18-4 22"/></>,
+  smile: <><circle cx="12" cy="12" r="9"/><path d="M8 14s1 3 4 3 4-3 4-3M8 8h.01M16 8h.01"/></>,
+  more: <><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,
   dial: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v2m7 2-1.5 1.5M21 12h-2m-2 7-1-1.5M5 7l1.5 1.5M3 12h2m2 7 1-1.5"/></>,
   grid: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
   plus: <path d="M12 5v14M5 12h14"/>,

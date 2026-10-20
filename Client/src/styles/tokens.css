@@ -1,0 +1,9 @@
+:root {
+  font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--ink); background: var(--canvas); color-scheme: dark; font-synthesis: none; line-height: 1.5; font-weight: 400;
+  --ink: #F7F5FF; --muted: #B6AEC6; --canvas: #02060E; --paper: #141020; --sidebar: #0C0914; --accent: #9303C5; --accent-hover: #AA18DB; --highlight: #351444; --tint: #241130; --line: #453B53; --danger: #FF9AA8; --danger-tint: #35151E; --success: #98DEC4;
+  --meta-font: "Fira Code", ui-monospace, monospace;
+  --outline: #F7F5FF; --edge: #665975; --shadow-color: #000;
+  --code-font: "JetBrains Mono", ui-monospace, monospace; --border: var(--ink); --surface: var(--paper); --bg: var(--canvas); --orange: var(--accent); --blue: var(--ink); --ivory: var(--canvas);
+  --radius: 6px; --radius-small: 3px; --shadow: 3px 3px 0 var(--shadow-color); --shadow-large: 6px 6px 0 var(--shadow-color); --focus: #CD9FF4;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+}

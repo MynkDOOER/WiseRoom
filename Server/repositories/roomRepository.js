@@ -6,15 +6,19 @@ const roomFields = {
   name: true,
   createdById: true,
   createdAt: true,
-  _count: { select: { members: true } },
+  avatarKey: true,
+  avatarUpdatedAt: true,
+  updatedAt: true,
+  _count: { select: { members: true, joinRequests: { where: { status: "PENDING" } } } },
 };
 
-export const createRoomWithOwner = async ({ name, userId, inviteToken }) => {
+export const createRoomWithOwner = async ({ name, userId, inviteToken, inviteCode }) => {
   return prisma.room.create({
     data: {
       name,
       createdById: userId,
       inviteToken,
+      inviteCode,
       members: { create: { userId, role: "OWNER" } },
     },
     select: roomFields,
@@ -40,6 +44,10 @@ export const findRoomByInviteToken = async (inviteToken) => {
   return prisma.room.findUnique({ where: { inviteToken }, select: { id: true } });
 };
 
-export const findRoomInvite = async (roomId) => {
-  return prisma.room.findUnique({ where: { id: roomId }, select: { inviteToken: true } });
+export const findRoomInvite = async (roomId, db = prisma) => {
+  return db.room.findUnique({ where: { id: roomId }, select: { inviteCode: true } });
 };
+
+export const findRoomByCode = (inviteCode, db = prisma) => db.room.findUnique({ where: { inviteCode }, select: { id: true, name: true } });
+export const updateRoom = (roomId, data, db = prisma) => db.room.update({ where: { id: roomId }, data, select: roomFields });
+export const setRoomCode = (roomId, inviteCode, db = prisma) => db.room.update({ where: { id: roomId }, data: { inviteCode, inviteToken: null }, select: { inviteCode: true } });

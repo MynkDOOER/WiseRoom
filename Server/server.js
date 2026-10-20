@@ -7,6 +7,7 @@ import prisma from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import inviteRoutes from "./routes/inviteRoutes.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -23,6 +24,7 @@ app.use(clerkMiddleware());
 app.use("/api/users", userRoutes);
 app.use("/api/rooms/:roomId/messages", messageRoutes);
 app.use("/api/rooms", roomRoutes);
+app.use("/api/invites", inviteRoutes);
 
 // Check the database connection through Prisma.
 app.get("/test-db", async (req, res) => {

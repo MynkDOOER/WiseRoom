@@ -8,6 +8,7 @@ export default function errorHandler(error, req, res, next) {
   if (error.type === "entity.parse.failed") {
     return res.status(400).json({ success: false, message: "Send a valid JSON request body." });
   }
+  if (error.type === "entity.too.large") return res.status(413).json({ success: false, message: "This upload is too large. Images allow 2 MB after cropping; voice messages allow 5 MB." });
   if (["P1001", "P1002", "P1017", "P2024"].includes(error.code ?? error.errorCode)) {
     return res.status(503).json({ success: false, message: "The database is unavailable. Please try again." });
   }

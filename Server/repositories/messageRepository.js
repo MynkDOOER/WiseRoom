@@ -4,6 +4,8 @@ const messageFields = {
   id: true,
   roomId: true,
   body: true,
+  voiceMime: true,
+  voiceDurationMs: true,
   createdAt: true,
   author: { select: { id: true, displayName: true } },
 };
@@ -28,3 +30,6 @@ export const findMessagePage = async (roomId, { before, limit }, db = prisma) =>
     select: messageFields,
   });
 };
+
+export const createVoiceMessage = async (data, db = prisma) => db.message.create({ data: { ...data, body: "" }, select: messageFields });
+export const findVoiceMessage = async (roomId, id, db = prisma) => db.message.findFirst({ where: { id, roomId }, select: { voiceKey: true, voiceMime: true } });
