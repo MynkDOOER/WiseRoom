@@ -2,9 +2,13 @@
 
 Applied to the main project at C:\Users\mayan\Downloads\WORKSPACE\WiseRoom.
 
-## Changes
+## Current design
 
-- Replaced the header Members button and full-height details sidebar with an elastic avatar stack and a compact floating member card. Mobile uses a bottom sheet.
+Follow [DESIGN.md](../DESIGN.md) and [UI-KIT.md](UI-KIT.md): warm charcoal, ivory, orange, Bricolage Grotesque headings, Hanken Grotesk copy, and JetBrains Mono labels. The elastic header stack opens the compact member card; the desktop RoomContextPanel complements it with actual members/details and existing settings/management actions. Narrow layouts retain header access.
+
+## Member-card implementation record
+
+- The header uses an elastic avatar stack and compact floating member card; mobile uses a bottom sheet. A desktop context panel now complements the card.
 - Adapted the supplied VengeanceUI spring interaction to the existing React/plain CSS application. No new dependencies, demo identities, or external avatar services.
 - Uses actual member names, roles, joined dates, and the signed-in Clerk user's existing photo. Other members use initials when the API has no photo.
 - Member rows expand to show joined dates. Larger lists have search and avatar overflow controls.
@@ -22,7 +26,7 @@ Applied to the main project at C:\Users\mayan\Downloads\WORKSPACE\WiseRoom.
 
 Backend, schema, APIs, dependencies, logo and credentials were not edited.
 
-## Checks actually performed
+## Member-card checks (historical milestone results)
 
 - Main frontend ESLint and production build passed (102 modules).
 - All 38 existing backend tests passed. These use mocked dependencies, not a live multi-user integration test.
@@ -37,6 +41,6 @@ Backend, schema, APIs, dependencies, logo and credentials were not edited.
 
 - The available signed-in account owns two single-member rooms. Multi-avatar neighbor displacement, larger-list search/overflow, and a non-owner leave dialog were not exercised with live users. No memberships or messages were added for this check.
 - Invitation retrieval succeeded, but the browser clipboard action timed out; copy completion was not confirmed. Existing manual token selection remains available.
-- This change does not add real-time messaging; Refresh latest remains the existing behavior.
+- That milestone did not add live transport. Current message, presence, typing, and activity updates use authenticated polling, with manual refresh retained.
 
 Reference: https://github.com/Ashutoshx7/VengeanceUI (ElasticStack supplied by the user).

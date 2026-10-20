@@ -1,16 +1,40 @@
-# React + Vite
+# WiseRoom frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19, Vite 8, React Router, and Clerk power WiseRoom's collaboration workspace and the interface for its upcoming room-scoped RAG workflow.
 
-Currently, two official plugins are available:
+- [Product vision, setup, architecture, progress, and RAG roadmap](../README.md)
+- [Current shared design direction](../DESIGN.md)
+- [UI component kit](UI-KIT.md)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Current interface
 
-## React Compiler
+The public homepage, workspace, conversations, authentication, dialogs, and member controls share warm charcoal surfaces, ivory text, and orange actions. Use Bricolage Grotesque for display headings, Hanken Grotesk for interface/messages, and JetBrains Mono for code/technical labels.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Reuse `WiseRoomLogo.jsx` for the original animated logo. Chat uses a framed conversation, compact single-row composer, actual member context, and a pointer/keyboard message timeline. Preserve focus states, reduced-motion support, permissions, and real data/loading/error states.
 
-## Expanding the ESLint configuration
+## Local development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Follow the root README to configure `Client/.env`, the API, Clerk, and Neon. From this directory:
+
+```bash
+npm ci
+npm run dev
+```
+
+Frontend: `http://localhost:5173`. Default API: `http://localhost:3000`.
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run preview` | Preview the build |
+| `npm run lint` | ESLint |
+| `npm test` | Frontend utility tests |
+
+## Styles and routes
+
+`src/main.jsx` loads the styles; `styles/interior.css` is last and defines the final shared visual treatment. `styles/auth.css` and `styles/authAppearance.js` style real Clerk forms. Landing styles are scoped and exclude Clerk descendants from their reset. See [DESIGN.md](../DESIGN.md) for the complete cascade.
+
+Public landing: `/`. Authentication: `/sign-in`, `/sign-up`. Signed-in views: `/workspace`, `/rooms/:roomId`, `/inbox`, `/threads`, `/saved`, `/join/:code`. The `/ui-kit` component reference is development-only.
+
+The landing AI/document conversation is illustrative. Document ingestion, embeddings, retrieval, and cited `@wise` answers remain upcoming milestones. Live workspace content comes from actual APIs.

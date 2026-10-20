@@ -2,7 +2,7 @@
 
 ## Consistency contract
 
-The public landing page is the visual source of truth for the whole product. Use warm charcoal surfaces, ivory text, restrained orange actions, Bricolage Grotesque display headings, Hanken Grotesk UI/messages, and JetBrains Mono metadata/code. Do not reintroduce the previous purple theme, alternate W/R monogram, or unrelated branding.
+The public landing page is the visual source of truth for the whole product. Use warm charcoal surfaces, ivory text, restrained orange actions, Bricolage Grotesque display headings, Hanken Grotesk UI/messages, and JetBrains Mono metadata/code. Reuse the original logo and shared tokens. [DESIGN.md](../DESIGN.md) is the canonical design reference.
 
 - `WiseRoomLogo.jsx` contains the real favicon artwork with its original paths/proportions. Reuse it for the public header/footer, authentication, and sidebar; its entry/hover animation has a reduced-motion fallback.
 - `styles/interior.css` is the final shared product treatment, imported after the other styles. It unifies room framing, surfaces, message typography, member cards, dialogs, navigation, and the compact single-row composer.
@@ -22,13 +22,14 @@ The current kit follows the supplied WiseRoom Genspark landing reference: a warm
 | `--paper` | `#1A161D` | Panels and fields |
 | `--ink` | `#F4EDE6` | Main text |
 | `--muted` | `#B9AFA8` | Secondary text |
-| `--line` | `#2C252B` | Quiet dividers |
+| `--line` | `rgba(255, 240, 230, 0.08)` | Quiet dividers |
+| `--edge` | `rgba(255, 240, 230, 0.14)` | Panel/control borders |
 | `--accent` | `#FF5A1F` | Primary actions |
-| `--highlight` | `#392018` | Selected and active states |
+| `--highlight` | `#FF5A1F1A` | Selected and active states |
 
-Hanken Grotesk is used for interface text and messages. Bricolage Grotesque is used for display headings. JetBrains Mono is used for the wordmark, code, timestamps, and small technical labels. These are the exact font families in the linked landing reference.
+Hanken Grotesk is used for interface text and messages. Bricolage Grotesque is used for display headings. JetBrains Mono is used for the wordmark, code, and small technical labels. Inline conversation names/times use Hanken Grotesk. These are the exact font families in the linked landing reference.
 
-`styles/tokens.css` supplies base tokens, `styles/ui.css` shared primitives, `index.css` the application layouts, `styles/composer.css` the recording/expression/crop foundations, and `styles/reference.css` the current screenshot theme and collaboration layouts. The scoped `styles/landing.css` reproduces the landing layout; `styles/conversation-theme.css` finishes the shared workspace treatment and is imported last. Clerk uses the same surface/accent/type treatment.
+Base tokens/primitives/layout live in `tokens.css`, `ui.css`, and `index.css`. `composer.css`, `reference.css`, and `brand.css` provide component foundations. `landing.css` scopes the public page, followed by `conversation-theme.css` and `auth.css`. **`interior.css` is imported last and supplies the final shared treatment.** `authAppearance.js` styles real Clerk forms; landing resets exclude Clerk descendants.
 
 ## Layout and behavior
 
@@ -37,7 +38,7 @@ Hanken Grotesk is used for interface text and messages. Bricolage Grotesque is u
 - Workspace (`/workspace`): date, personal greeting, true unread summary, create-room action, inline invitation entry, compact room rows with latest message/time, list/grid toggle and a real activity column.
 - Room header: clickable room avatar to switch rooms, room name, actual member/online counts, member stack, search, personal pin and settings controls. Invite is rendered only for `OWNER` and remains visible on narrow screens. Members can still change the room picture; owner-only rename/invitation/member controls remain enforced.
 - Chat: one left-aligned chronological column, grouped consecutive messages, inline names/timestamps and quiet unboxed text. Hover or keyboard focus reveals actual reaction/thread/message actions. Touch exposes the actions menu.
-- Composer: the reference's two-row textarea/action layout, with expression/code/voice controls and a persistent Send action that is disabled when empty. Enter sends; Shift+Enter inserts a newline. Recording preview and errors appear only when relevant.
+- Composer: the compact single-row controls/input layout, with expression/code/voice controls and a persistent Send action that is disabled when empty. Enter sends; Shift+Enter inserts a newline. Recording preview and errors appear only when relevant.
 - Code: supported language syntax coloring, safe escaping and Copy. Highlighting loads as a separate bundle. Unknown languages render as escaped text.
 - Links: cards show actual URL/host/path. There is no remote metadata/image fetch or fabricated title/description.
 - Voice: custom play/pause/seek controls, duration and a waveform decoded from the recording after loading. Unloaded audio uses flat neutral bars. Existing real recording/preview/cancel/upload behavior remains intact.
@@ -49,4 +50,4 @@ Keep native dialog focus containment and focus return. Preserve drafts and histo
 
 ## Verification
 
-The final client passes lint, production build and 15 tests. Backend verification has 82 passing tests. Live checks covered Home, actual reactions/save/unsave, persisted thread reply, Threads navigation, sidebar pin/unpin, and desktop/mobile layouts at 390px/320px. The user confirmed owner-only invites and cross-account typing. Tests use isolated auth/database doubles; they are distinct from those live checks. See `../IMPLEMENTATION.md` for API/storage limits and the complete implementation report.
+The collaboration milestone recorded 15 passing frontend and 82 passing backend tests. Later visual updates passed lint/build and browser checks; automated tests were not rerun for those updates. Live checks covered Home, actual reactions/save/unsave, persisted thread reply, Threads navigation, sidebar pin/unpin, and desktop/mobile layouts at 390px/320px. The user confirmed owner-only invites and cross-account typing. Tests use isolated auth/database doubles; they are distinct from those live checks. See `../IMPLEMENTATION.md` for API/storage limits and the complete implementation report.

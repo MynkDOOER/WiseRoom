@@ -2,9 +2,11 @@
 
 Implemented in the actual `Downloads/WORKSPACE/WiseRoom` project. Existing authentication, room creation/admission, ownership, member management, local pictures, text history and voice recording are preserved.
 
+Current shared design: [DESIGN.md](DESIGN.md) and [Client/UI-KIT.md](Client/UI-KIT.md). This report preserves the collaboration implementation/verification record.
+
 ## What changed
 
-The current Home/sidebar/chat styling follows the supplied screenshots: charcoal-purple surfaces, restrained violet, compact navigation/header, a monospaced greeting with sans-serif interface/message text, left-aligned grouped messages, inline timestamps, code cards, custom voice controls, contextual actions and the two-row composer. Actual room/message/activity data determines the content; the screenshots' example users and activity were not inserted.
+Current Home/sidebar/chat styling uses warm charcoal surfaces, ivory text, orange actions, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata. Conversations use grouped rows, inline timestamps, code cards, voice controls, contextual actions, a timeline rail, and a compact single-row composer. Actual records determine live room content; the public AI preview is labeled separately.
 
 Invite is only rendered for the owner, guarded again before the frontend invitation request, and enforced by the existing owner-only backend service. The owner button remains visible at mobile widths.
 
@@ -47,7 +49,7 @@ All routes require verified Clerk authentication. Room actions also require curr
 
 Save/reaction requests specify an explicit desired state, so retries do not toggle twice. Membership checks and message writes use Serializable transactions with bounded retries. Feed queries restrict access to current room memberships. Activity and history pages are bounded and cursor-paginated. Unread read-through timestamps advance monotonically.
 
-## Verification actually performed
+## Collaboration verification (historical milestone results)
 
 - Client lint and production build pass; syntax highlighting is split into a separate bundle.
 - **15 frontend tests pass**, including safe code highlighting/HTML escaping, URL-card parsing and the older-history polling regression.

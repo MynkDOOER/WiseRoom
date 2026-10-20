@@ -1,12 +1,18 @@
 # WiseRoom implementation — 2026-10-20
 
-## Scope completed
+## Current design
 
-Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` following approval to build the full plan with neo-brutalist styling and Socket.IO excluded.
+The public homepage is the visual source of truth: warm charcoal surfaces, ivory text, orange actions, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata. All brand placements share the original animated logo. Chat uses a framed conversation, compact single-row composer, real member context, and an interactive timeline.
+
+See [DESIGN.md](DESIGN.md) and [Client/UI-KIT.md](Client/UI-KIT.md). The collaboration foundation supports the remaining document ingestion, embedding, retrieval, and cited-answer milestones in [README.md](README.md).
+
+## Room-management foundation
+
+Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` with the approved room-management scope and the shared homepage design. Socket.IO is excluded.
 
 - Reusable UI kit and development reference at `/ui-kit`.
-- Ivory/dark-outline/coral theme, Inter UI/messages and JetBrains Mono code.
-- Quiet Home with compact room rows, no homepage logo illustration or oversized cards.
+- Warm charcoal/ivory/orange palette; Bricolage Grotesque headings, Hanken Grotesk UI/messages, JetBrains Mono code/metadata.
+- Public landing at `/`; signed-in workspace at `/workspace`, with compact room rows, actual activity, and shared animated branding.
 - Persistent resizable/collapsible sidebar, mobile drawer and anchored curved room picker.
 - Owner room rename and member removal.
 - Member-editable room picture: local file selection, crop, pan, zoom, 512×512 server-processed image, removal and initials fallback.
@@ -15,7 +21,7 @@ Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` following approval to b
 - Existing members follow the link directly into the room. Removed members require a new approved request.
 - Safe sign-in/sign-up return paths preserve valid invitations.
 
-No Socket.IO dependency, socket server/client, realtime events, fake AI controls or mock application data was added. Existing HTTP message persistence/pagination remains unchanged. Refresh controls are used for new messages and request decisions.
+Current message/activity/presence/typing updates use authenticated polling, with manual refresh/retry available. HTTP persistence, cursor pagination, and membership checks are preserved. Socket.IO is not implemented. The public AI/document preview is labeled; live rooms use actual records.
 
 ## Database / compatibility
 
@@ -60,7 +66,7 @@ This local adapter is for a persistent development filesystem. Connect persisten
 
 Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. npm audit still reports existing Prisma/config/deepmerge-ts and proxy-addr advisories; those unrelated packages were not force-upgraded in this change. No Socket.IO was installed.
 
-## Verification actually performed
+## Room-management verification (historical milestone results)
 
 - Main frontend `npm run lint`: passed.
 - Main frontend `npm test`: 3 tests passed (safe auth returns and invitation parsing/origin checks).
@@ -68,7 +74,7 @@ Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. 
 - Main backend `npm test`: 52 tests passed. Existing user/message tests remain; obsolete automatic-join tests were replaced with approval-flow cases.
 - Prisma validation/generation and migration deploy succeeded.
 - `git diff --check`: checked; ordinary LF/CRLF conversion notices are informational.
-- Signed-in live browser: actual rooms/messages load; no homepage illustration/big cards; keyboard sidebar resizing, collapse and persistence; room switcher uses real names/memberships; owner settings and request/member lists open.
+- Signed-in live browser: actual rooms/messages load; compact room navigation; keyboard sidebar resizing, collapse and persistence; room switcher uses real names/memberships; owner settings and request/member lists open.
 - Renamed the owned Reading room, verified the result and restored its original name.
 - Uploaded an isolated generated crop-check fixture, adjusted zoom/pan, saved it through the real API and confirmed the returned picture decoded to 512×512. Removed it again, restoring the room's original picture state.
 - An unsent draft survived settings/photo dialogs. The draft was cleared without sending it.
@@ -76,31 +82,33 @@ Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. 
 - UI kit native dialog closed on Escape and returned focus to its opener.
 - Inspected desktop and 390px/320px layouts, drawer, settings, switcher and composer. Measured no horizontal page overflow in the checked phone views.
 
-## Verification limits / remaining deployment work
+## Verification context and remaining work
 
-- The available browser session has one real signed-in account. Live two-account request/approval/decline/removal was not exercised; authorization/state changes are covered by isolated HTTP tests with mocked authentication/database. Do not describe those tests as live multi-user verification.
+- The room-management verification run used one real signed-in account. Live two-account request/approval/decline/removal was not exercised; authorization/state changes are covered by isolated HTTP tests with mocked authentication/database. Do not describe those tests as live multi-user verification.
 - Invitation copy uses the browser clipboard API with a visible selectable-link fallback. A previous browser automation clipboard attempt timed out; clipboard completion is not claimed here.
-- No hosted-storage deployment, realtime messaging, email notifications, PDF/RAG features or ownership transfer is included.
-- Cached chat does not automatically disappear from another browser when a member is removed. The server denies subsequent reads/writes; the UI refreshes when the user requests current state.
+- Hosted storage/deployment, email notifications, document/RAG processing, and ownership transfer remain unimplemented. Current live updates use polling.
+- Cached chat does not automatically disappear from another browser when a member is removed. The server denies subsequent reads/writes; active clients recheck access through polling or manual refresh.
 - Full screen-reader/a11y certification and long-list multi-user UX testing remain separate from the checks above.
 
-No code was committed or pushed. Changes that existed before this work were preserved. Original overwritten files were backed up outside the repository in the task's `neo-build/before/` folder. No secret values were printed or copied into application source.
+No code was committed or pushed. Changes that existed before this work were preserved. Original overwritten files were backed up outside the repository in the task working area. No secret values were printed or copied into application source.
 
-## 20 October: dark purple kit and voice composer
+## Voice messaging and composer
 
-The current palette supersedes the earlier light kit: near-black, dark purple, bright white accents; JetBrains Mono throughout, Fira Code for small metadata. The composer is a single 56px row at rest (70px including bottom spacing); extra UI appears only for an error, near-limit text, or an unsent voice preview.
+The composer uses the shared warm charcoal/ivory/orange design, Hanken Grotesk controls/messages, and JetBrains Mono technical labels. Its compact single-row layout has a 48px minimum resting height; multiline text expands within its limit. Errors, near-limit state, and unsent voice preview appear only when relevant.
 
 New frontend modules: `ComposerTools`, `VoicePill`, `VoiceMessage`, `useVoiceRecorder`, and `styles/composer.css`. ChatPanel preserves text sending, cursor history, chronological rendering, membership errors and drafts. Expression/code dialogs insert into the draft rather than sending immediately. Existing raw code messages are not retroactively rewritten; use the code tool for new formatted notes.
 
 Voice backend layers:
 
 - `POST /api/rooms/:roomId/messages/voice?durationMs=…`: authenticated binary upload, up to 5 MB. Validates a supported MIME/container signature and duration metadata (300–120000ms), checks membership before writing and again in a Serializable insert transaction. Failed inserts remove the written file.
-- `GET /api/rooms/:roomId/messages/:messageId/voice`: checks current membership and message/room scope, returns private/no-store audio with nosniff. The client fetches an authenticated blob when the user chooses Load voice note, so no bearer token goes in a URL. Browser controls handle playback after loading.
+- `GET /api/rooms/:roomId/messages/:messageId/voice`: checks current membership and message/room scope, returns private/no-store audio with nosniff. The client fetches an authenticated blob when the user chooses Load voice note, so no bearer token goes in a URL. Custom play/pause/seek controls handle playback after loading, with a decoded waveform where supported.
 - `voiceController.js`, `voiceService.js`, repository functions in `messageRepository.js`, `utils/voiceUpload.js`, and `config/localVoiceStore.js` keep the existing route/controller/service/repository structure.
 - Additive migration `20261020120000_voice_messages` adds nullable `voiceKey`, `voiceMime`, `voiceDurationMs` columns. Existing messages/pagination are preserved. Storage keys are not included in message API responses.
 - Local recordings are immutable generated files under ignored `Server/data/voice/`. Back up this directory with the database. Before deployment, provide durable shared storage and a retention/orphan cleanup policy; a process crash between writing a file and inserting its row can leave an orphan. There is no automatic transcoding. Container checks are not a full media decode; client duration is descriptive metadata, while file size is enforced independently.
 
-Checks: frontend lint/build, 3 frontend tests, 65 backend tests (including 13 voice tests), and patch whitespace. Live UI checks include desktop/mobile composer, font mapping, expression insertion, code insertion and maximum-length validation. The user confirmed live recording/playback in their browser. No Socket.IO or realtime work was added. No secrets were printed or copied.
+Voice milestone verification (historical): frontend lint/build, 3 frontend tests, 65 backend tests (including 13 voice tests), and patch whitespace. Live UI checks include desktop/mobile composer, font mapping, expression insertion, code insertion and maximum-length validation. The user confirmed live recording/playback in their browser. No Socket.IO was added at that milestone; polling collaboration updates were added later. No secrets were printed or copied.
 
 ## Reference UI and collaboration update
-See REPORT-REFERENCE-UPDATE.md for the current screenshot design, approved collaboration features, migration, API routes, verification and deployment limits. This supersedes the earlier theme and composer descriptions. Current checks: 82 backend tests and 15 frontend tests, plus lint/build and desktop/mobile verification.
+[REPORT-REFERENCE-UPDATE.md](REPORT-REFERENCE-UPDATE.md) records collaboration features, migrations, APIs, and historical verification (82 backend and 15 frontend tests).
+
+The current design is documented in [DESIGN.md](DESIGN.md), [REPORT-LANDING-REDESIGN.md](REPORT-LANDING-REDESIGN.md), and [REPORT-INTERIOR-CONSISTENCY.md](REPORT-INTERIOR-CONSISTENCY.md). Later landing/auth/interior changes were checked with lint/build and browser inspection; automated tests were not rerun for those visual-only updates.

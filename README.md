@@ -386,7 +386,7 @@ Run these from their respective directories:
 
 ## Contributing
 
-Issues and pull requests are welcome. Keep changes focused, preserve room membership checks, and follow the existing route/controller/service/repository structure. For interface work, follow [the WiseRoom UI kit](Client/UI-KIT.md) and reuse the original logo, shared typography, and color tokens.
+Issues and pull requests are welcome. Keep changes focused, preserve room membership checks, and follow the existing route/controller/service/repository structure. For interface work, follow [the shared design direction](DESIGN.md) and [the WiseRoom UI kit](Client/UI-KIT.md). Reuse the original animated logo, warm charcoal/ivory/orange tokens, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata.
 
 ## License
 
