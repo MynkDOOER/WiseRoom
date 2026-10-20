@@ -8,18 +8,182 @@ import Modal from "../components/Modal";
 import Icon from "../components/Icon";
 import MessageContent from "../components/MessageContent";
 
-const colors = [["Canvas", "#02060E", "--canvas"], ["Paper", "#141020", "--paper"], ["Ink", "#F7F5FF", "--ink"], ["Violet", "#9303C5", "--accent"], ["Highlight", "#351444", "--highlight"]];
+const colors = [
+  ["Canvas", "#02060E", "--canvas"],
+  ["Paper", "#141020", "--paper"],
+  ["Ink", "#F7F5FF", "--ink"],
+  ["Violet", "#9303C5", "--accent"],
+  ["Highlight", "#351444", "--highlight"],
+];
 export default function UIKitPage() {
   const [dialog, setDialog] = useState(false);
   const [name, setName] = useState("");
   const [feedback, setFeedback] = useState("");
-  return <main className="kit-page"><header className="kit-header"><div><Badge tone="accent">WiseRoom / UI kit</Badge><h1>Built to talk.</h1><p>Neo-brutalist foundations, readable conversations. These are the same components used by the app.</p></div><Link className="button secondary" to="/">Open workspace<Icon name="arrow"/></Link></header>
-    <section className="kit-section"><h2>01 / Color</h2><div className="kit-grid">{colors.map(([label,hex,token]) => <div className="kit-swatch" key={token}><div style={{background:`var(${token})`}}/><p>{label}<code>{hex} · {token}</code></p></div>)}</div></section>
-    <section className="kit-section"><h2>02 / Typography</h2><div className="kit-sample"><p className="kit-type-display">A clear place for your conversations.</p><p className="kit-space">JetBrains Mono for the interface, messages, and code. Fira Code for small labels and metadata.</p><p className="kit-caption">Body 15px · Metadata 12px · Headings 600–800 · Comfortable line spacing</p><pre className="kit-space"><code>const room = await getRoom(roomId);</code></pre></div></section>
-    <section className="kit-section"><h2>03 / Actions & states</h2><div className="kit-sample"><div className="kit-actions"><Button variant="primary" onClick={() => setFeedback("Primary action selected.")}><Icon name="plus"/>Primary action</Button><Button onClick={() => setDialog(true)}>Open dialog</Button><Button variant="danger-outline" onClick={() => setFeedback("Destructive actions require confirmation in the app.")}>Destructive</Button><Button disabled>Unavailable</Button></div><div className="kit-actions kit-space"><Badge tone="accent">Owner</Badge><Badge>Member</Badge><Badge tone="danger">Error</Badge><RoomAvatar name="Design studio"/><RoomAvatar name="Reading room"/></div>{feedback && <p className="kit-feedback" role="status">{feedback}</p>}</div></section>
-    <section className="kit-section"><h2>04 / Fields</h2><div className="kit-grid"><div className="kit-sample"><TextField label="Room name" value={name} onChange={event => setName(event.target.value)} hint="3–80 characters. The owner can rename it." placeholder="e.g. Design studio"/></div><div className="kit-sample"><TextField label="Validation example" defaultValue="D" error="Use at least 3 characters."/></div></div></section>
-    <section className="kit-section"><h2>05 / Conversation</h2><div className="kit-sample"><div className="message kit-message"><div className="message-meta"><strong>Member</strong></div><MessageContent body="A readable message with a quiet surface and a clear outline." createdAt="2026-10-20T10:30:00Z"/></div><div className="message mine kit-message"><div className="message-meta"><strong>You</strong></div><MessageContent body={'Code stays distinct.\n```js\nconst room = await getRoom(roomId);\n```'} createdAt="2026-10-20T10:31:00Z"/></div></div></section>
-    <section className="kit-section"><h2>06 / Interaction rules</h2><div className="kit-sample"><p>Hard shadows on actions and overlays. Quiet messages. Visible keyboard focus. Generous touch targets. Color always paired with labels. Motion follows your system preference.</p></div></section>
-    {dialog && <Modal title="A reusable dialog" onClose={() => setDialog(false)}><p className="muted">Native keyboard focus, Escape to close, and focus returned to the opener.</p><div className="dialog-footer"><Button onClick={() => setDialog(false)}>Close</Button><Button variant="primary" onClick={() => { setDialog(false); setFeedback("Dialog action completed."); }}>Confirm</Button></div></Modal>}
-  </main>;
+  return (
+    <main className="kit-page">
+      <header className="kit-header">
+        <div>
+          <Badge tone="accent">WiseRoom / UI kit</Badge>
+          <h1>Built to talk.</h1>
+          <p>
+            Neo-brutalist foundations, readable conversations. These are the
+            same components used by the app.
+          </p>
+        </div>
+        <Link className="button secondary" to="/">
+          Open workspace
+          <Icon name="arrow" />
+        </Link>
+      </header>
+      <section className="kit-section">
+        <h2>01 / Color</h2>
+        <div className="kit-grid">
+          {colors.map(([label, hex, token]) => (
+            <div className="kit-swatch" key={token}>
+              <div style={{ background: `var(${token})` }} />
+              <p>
+                {label}
+                <code>
+                  {hex} · {token}
+                </code>
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="kit-section">
+        <h2>02 / Typography</h2>
+        <div className="kit-sample">
+          <p className="kit-type-display">
+            A clear place for your conversations.
+          </p>
+          <p className="kit-space">
+            JetBrains Mono for the interface, messages, and code. Fira Code for
+            small labels and metadata.
+          </p>
+          <p className="kit-caption">
+            Body 15px · Metadata 12px · Headings 600–800 · Comfortable line
+            spacing
+          </p>
+          <pre className="kit-space">
+            <code>const room = await getRoom(roomId);</code>
+          </pre>
+        </div>
+      </section>
+      <section className="kit-section">
+        <h2>03 / Actions & states</h2>
+        <div className="kit-sample">
+          <div className="kit-actions">
+            <Button
+              variant="primary"
+              onClick={() => setFeedback("Primary action selected.")}
+            >
+              <Icon name="plus" />
+              Primary action
+            </Button>
+            <Button onClick={() => setDialog(true)}>Open dialog</Button>
+            <Button
+              variant="danger-outline"
+              onClick={() =>
+                setFeedback(
+                  "Destructive actions require confirmation in the app.",
+                )
+              }
+            >
+              Destructive
+            </Button>
+            <Button disabled>Unavailable</Button>
+          </div>
+          <div className="kit-actions kit-space">
+            <Badge tone="accent">Owner</Badge>
+            <Badge>Member</Badge>
+            <Badge tone="danger">Error</Badge>
+            <RoomAvatar name="Design studio" />
+            <RoomAvatar name="Reading room" />
+          </div>
+          {feedback && (
+            <p className="kit-feedback" role="status">
+              {feedback}
+            </p>
+          )}
+        </div>
+      </section>
+      <section className="kit-section">
+        <h2>04 / Fields</h2>
+        <div className="kit-grid">
+          <div className="kit-sample">
+            <TextField
+              label="Room name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              hint="3–80 characters. The owner can rename it."
+              placeholder="e.g. Design studio"
+            />
+          </div>
+          <div className="kit-sample">
+            <TextField
+              label="Validation example"
+              defaultValue="D"
+              error="Use at least 3 characters."
+            />
+          </div>
+        </div>
+      </section>
+      <section className="kit-section">
+        <h2>05 / Conversation</h2>
+        <div className="kit-sample">
+          <div className="message kit-message">
+            <div className="message-meta">
+              <strong>Member</strong>
+            </div>
+            <MessageContent
+              body="A readable message with a quiet surface and a clear outline."
+              createdAt="2026-10-20T10:30:00Z"
+            />
+          </div>
+          <div className="message mine kit-message">
+            <div className="message-meta">
+              <strong>You</strong>
+            </div>
+            <MessageContent
+              body={
+                "Code stays distinct.\n```js\nconst room = await getRoom(roomId);\n```"
+              }
+              createdAt="2026-10-20T10:31:00Z"
+            />
+          </div>
+        </div>
+      </section>
+      <section className="kit-section">
+        <h2>06 / Interaction rules</h2>
+        <div className="kit-sample">
+          <p>
+            Hard shadows on actions and overlays. Quiet messages. Visible
+            keyboard focus. Generous touch targets. Color always paired with
+            labels. Motion follows your system preference.
+          </p>
+        </div>
+      </section>
+      {dialog && (
+        <Modal title="A reusable dialog" onClose={() => setDialog(false)}>
+          <p className="muted">
+            Native keyboard focus, Escape to close, and focus returned to the
+            opener.
+          </p>
+          <div className="dialog-footer">
+            <Button onClick={() => setDialog(false)}>Close</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setDialog(false);
+                setFeedback("Dialog action completed.");
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </main>
+  );
 }

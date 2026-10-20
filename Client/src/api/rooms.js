@@ -1,13 +1,44 @@
 import { apiRequest, withAvatarUrl } from "./http";
-const path = roomId => `/rooms/${encodeURIComponent(roomId)}`;
-export const listRooms = async (token, signal) => (await apiRequest(token, "/rooms", { signal })).rooms.map(withAvatarUrl);
-export const createRoom = async (token, name) => withAvatarUrl((await apiRequest(token, "/rooms", { method: "POST", body: { name } })).room);
-export const getRoom = async (token, roomId, signal) => withAvatarUrl((await apiRequest(token, path(roomId), { signal })).room);
-export const getMembers = async (token, roomId, signal) => (await apiRequest(token, `${path(roomId)}/members`, { signal })).members;
-export const getInvite = async (token, roomId) => (await apiRequest(token, `${path(roomId)}/invite`)).invite;
-export const resetInvite = async (token, roomId) => (await apiRequest(token, `${path(roomId)}/invite/reset`, { method: "POST" })).invite;
-export const leaveRoom = (token, roomId) => apiRequest(token, `${path(roomId)}/members/me`, { method: "DELETE" });
-export const removeMember = (token, roomId, userId) => apiRequest(token, `${path(roomId)}/members/${encodeURIComponent(userId)}`, { method: "DELETE" });
-export const renameRoom = async (token, roomId, name) => withAvatarUrl((await apiRequest(token, path(roomId), { method: "PATCH", body: { name } })).room);
-export const uploadRoomAvatar = (token, roomId, blob) => apiRequest(token, `${path(roomId)}/avatar`, { method: "PUT", binary: blob });
-export const resetRoomAvatar = (token, roomId) => apiRequest(token, `${path(roomId)}/avatar`, { method: "DELETE" });
+
+const path = (roomId) => `/rooms/${encodeURIComponent(roomId)}`;
+
+export const listRooms = async (token, signal) =>
+  (await apiRequest(token, "/rooms", { signal })).rooms.map(withAvatarUrl);
+
+export const createRoom = async (token, name) =>
+  withAvatarUrl(
+    (await apiRequest(token, "/rooms", { method: "POST", body: { name } }))
+      .room,
+  );
+export const getRoom = async (token, roomId, signal) =>
+  withAvatarUrl((await apiRequest(token, path(roomId), { signal })).room);
+
+export const getMembers = async (token, roomId, signal) =>
+  (await apiRequest(token, `${path(roomId)}/members`, { signal })).members;
+
+export const getInvite = async (token, roomId) =>
+  (await apiRequest(token, `${path(roomId)}/invite`)).invite;
+
+export const resetInvite = async (token, roomId) =>
+  (await apiRequest(token, `${path(roomId)}/invite/reset`, { method: "POST" }))
+    .invite;
+
+export const leaveRoom = (token, roomId) =>
+  apiRequest(token, `${path(roomId)}/members/me`, { method: "DELETE" });
+
+export const removeMember = (token, roomId, userId) =>
+  apiRequest(token, `${path(roomId)}/members/${encodeURIComponent(userId)}`, {
+    method: "DELETE",
+  });
+
+export const renameRoom = async (token, roomId, name) =>
+  withAvatarUrl(
+    (await apiRequest(token, path(roomId), { method: "PATCH", body: { name } }))
+      .room,
+  );
+
+export const uploadRoomAvatar = (token, roomId, blob) =>
+  apiRequest(token, `${path(roomId)}/avatar`, { method: "PUT", binary: blob });
+
+export const resetRoomAvatar = (token, roomId) =>
+  apiRequest(token, `${path(roomId)}/avatar`, { method: "DELETE" });

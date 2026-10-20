@@ -12,19 +12,29 @@ import JoinRoomPage from "./Pages/JoinRoomPage";
 
 function Workspace() {
   const { userId } = useAuth();
-  return <WorkspaceProvider key={userId}><WorkspaceLayout/></WorkspaceProvider>;
+  return (
+    <WorkspaceProvider key={userId}>
+      <WorkspaceLayout />
+    </WorkspaceProvider>
+  );
 }
 
 const App = () => {
   return (
     <Routes>
-      {import.meta.env.DEV && <Route path="/ui-kit" element={<UIKitPage/>}/>}
+      {import.meta.env.DEV && <Route path="/ui-kit" element={<UIKitPage />} />}
       <Route path="/sign-in/*" element={<SignInPage />} />
       <Route path="/sign-up/*" element={<SignUpPage />} />
-      <Route element={<ProtectedRoute><Workspace/></ProtectedRoute>}>
-        <Route path="/" element={<HomePage/>}/>
-        <Route path="/rooms/:roomId" element={<RoomPage/>}/>
-        <Route path="/join/:code" element={<JoinRoomPage/>}/>
+      <Route
+        element={
+          <ProtectedRoute>
+            <Workspace />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<HomePage />} />
+        <Route path="/rooms/:roomId" element={<RoomPage />} />
+        <Route path="/join/:code" element={<JoinRoomPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

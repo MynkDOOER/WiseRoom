@@ -1,55 +1,116 @@
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:3000"
+).replace(/\/$/, "");
 
-async function request(token, roomId, { method = "GET", query = "", body, signal } = {}) {
-  if (!token) throw Object.assign(new Error("Your session expired. Please sign in again."), { status: 401 });
+async function request(
+  token,
+  roomId,
+  { method = "GET", query = "", body, signal } = {},
+) {
+  if (!token)
+    throw Object.assign(
+      new Error("Your session expired. Please sign in again."),
+      { status: 401 },
+    );
   let response;
   try {
-    response = await fetch(`${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages${query}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+    response = await fetch(
+      `${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages${query}`,
+      {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(body !== undefined ? { body: JSON.stringify({ body }) } : {}),
+        signal,
       },
-      ...(body !== undefined ? { body: JSON.stringify({ body }) } : {}),
-      signal,
-    });
+    );
   } catch (error) {
     if (error.name === "AbortError") throw error;
-    throw new Error("Cannot reach the server. Please try again when it is available.", { cause: error });
+    throw new Error(
+      "Cannot reach the server. Please try again when it is available.",
+      { cause: error },
+    );
   }
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw Object.assign(new Error(data?.message || "Couldn't load this conversation. Please try again."), { status: response.status });
+    throw Object.assign(
+      new Error(
+        data?.message || "Couldn't load this conversation. Please try again.",
+      ),
+      { status: response.status },
+    );
   }
-  if (!data) throw new Error("The server returned an unexpected response. Please try again.");
+  if (!data)
+    throw new Error(
+      "The server returned an unexpected response. Please try again.",
+    );
   return data;
 }
 
-export const getMessages = async (token, roomId, { before, limit = 30, signal } = {}) => {
+export const getMessages = async (
+  token,
+  roomId,
+  { before, limit = 30, signal } = {},
+) => {
   const query = new URLSearchParams({ limit: String(limit) });
   if (before) query.set("before", before);
   return request(token, roomId, { query: `?${query}`, signal });
 };
 
 export const sendMessage = async (token, roomId, body, { signal } = {}) => {
-  return (await request(token, roomId, { method: "POST", body, signal })).message;
+  return (await request(token, roomId, { method: "POST", body, signal }))
+    .message;
 };
 
-export async function sendVoiceMessage(token, roomId, recording, { signal } = {}) {
-  if (!token) throw Object.assign(new Error("Your session expired. Please sign in again."), { status: 401 });
-  const response = await fetch(`${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages/voice?durationMs=${recording.duration}`, {
-    method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": recording.blob.type }, body: recording.blob, signal,
-  });
+export async function sendVoiceMessage(
+  token,
+  roomId,
+  recording,
+  { signal } = {},
+) {
+  if (!token)
+    throw Object.assign(
+      new Error("Your session expired. Please sign in again."),
+      { status: 401 },
+    );
+  const response = await fetch(
+    `${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages/voice?durationMs=${recording.duration}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": recording.blob.type,
+      },
+      body: recording.blob,
+      signal,
+    },
+  );
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw Object.assign(new Error(data?.message || "Couldn’t send this recording. Try again."), { status: response.status });
+  if (!response.ok)
+    throw Object.assign(
+      new Error(data?.message || "Couldn’t send this recording. Try again."),
+      { status: response.status },
+    );
   return data.message;
 }
 export async function loadVoiceMessage(token, roomId, messageId, signal) {
-  if (!token) throw Object.assign(new Error("Your session expired. Please sign in again."), { status: 401 });
-  const response = await fetch(`${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}/voice`, { headers: { Authorization: `Bearer ${token}` }, signal });
+  if (!token)
+    throw Object.assign(
+      new Error("Your session expired. Please sign in again."),
+      { status: 401 },
+    );
+  const response = await fetch(
+    `${API_URL}/api/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}/voice`,
+    { headers: { Authorization: `Bearer ${token}` }, signal },
+  );
   if (!response.ok) {
     const data = await response.json().catch(() => null);
-    throw Object.assign(new Error(data?.message || "Couldn’t load this recording."), { status: response.status });
+    throw Object.assign(
+      new Error(data?.message || "Couldn’t load this recording."),
+      { status: response.status },
+    );
   }
   return response.blob();
 }
