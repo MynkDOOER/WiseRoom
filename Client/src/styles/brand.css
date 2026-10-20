@@ -1,0 +1,107 @@
+/* The home-link signature is scoped so authentication branding stays intact. */
+.sidebar-brand-row {
+  height: 70px;
+  min-height: 70px;
+  margin-bottom: 8px;
+}
+
+.sidebar-brand-row .brand {
+  min-width: 0;
+  border-radius: 8px;
+  outline-offset: 5px;
+}
+
+.brand-signature {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.brand-signature-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 35px;
+  width: 35px;
+  height: 39px;
+  border-radius: 9px;
+  background: #f974440a;
+  transition: background 220ms ease, transform 280ms ease;
+}
+
+.brand-signature-mark svg {
+  width: 35px;
+  height: 35px;
+  overflow: visible;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.signature-frame { stroke: #756977; stroke-width: 1; }
+.signature-w { stroke: #fbefe8; stroke-width: 2.6; }
+.signature-r { stroke: #edbd9f; stroke-width: 2.6; }
+.signature-spark { fill: #edbd9f; transform-origin: 38px 7px; }
+
+.signature-w,
+.signature-r {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: signature-write 1.15s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.signature-r { animation-delay: 180ms; }
+.signature-spark { animation: signature-arrive 550ms 650ms both; }
+
+.brand-signature-copy { display: grid; gap: 5px; white-space: nowrap; }
+.brand-signature-name {
+  color: #fbefe8;
+  font: 700 17px/1 var(--display-font);
+  letter-spacing: -.075em;
+}
+.brand-signature-name > span { color: #ccc4cd; transition: color 220ms ease; }
+.brand-signature-name > i { color: #edbd9f; font-style: normal; }
+.brand-signature-caption {
+  color: #9e989e;
+  font: 400 7px/1 var(--meta-font);
+  letter-spacing: .13em;
+}
+
+.brand:is(:hover, :focus-visible) .brand-signature-mark {
+  background: #f971401a;
+  transform: translateY(-1px);
+}
+.brand:is(:hover, :focus-visible) .signature-w,
+.brand:is(:hover, :focus-visible) .signature-r {
+  animation: signature-retrace 750ms cubic-bezier(.22, 1, .36, 1) both;
+}
+.brand:is(:hover, :focus-visible) .signature-r { animation-delay: 90ms; }
+.brand:is(:hover, :focus-visible) .brand-signature-name > span { color: #f6dece; }
+.brand:is(:hover, :focus-visible) .signature-spark { animation: signature-arrive 500ms both; }
+
+.sidebar-collapsed .brand-signature-copy { display: none; }
+.sidebar-collapsed .sidebar-brand-row { gap: 8px; margin: 12px 0 17px; }
+
+@keyframes signature-write {
+  from { stroke-dashoffset: 1; opacity: 0; }
+  20% { opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes signature-retrace {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes signature-arrive {
+  from { opacity: 0; transform: scale(.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 700px) {
+  .navigation-drawer .sidebar-brand-row { height: 64px; min-height: 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-signature *, .brand-signature *::before, .brand-signature *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .brand:is(:hover, :focus-visible) .brand-signature-mark { transform: none; }
+}

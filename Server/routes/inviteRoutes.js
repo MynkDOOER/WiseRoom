@@ -1,7 +1,13 @@
 import express from "express";
 import protect from "../middlewares/authMiddleware.js";
 import inviteRateLimit from "../middlewares/inviteRateLimit.js";
-import { previewInvite, requestAccess, cancelAccess, myRequests, cancelMyRequest } from "../controllers/joinRequestController.js";
+import {
+  previewInvite,
+  requestAccess,
+  cancelAccess,
+  myRequests,
+  cancelMyRequest,
+} from "../controllers/joinRequestController.js";
 const router = express.Router();
 router.use(protect);
 router.get("/requests/me", myRequests);

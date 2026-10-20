@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import LandingPage from "./Pages/LandingPage";
 import SignInPage from "./Pages/SignInPage";
 import SignUpPage from "./Pages/SignUpPage";
 import ActivityPage from "./Pages/ActivityPage";
@@ -23,6 +24,7 @@ function Workspace() {
 const App = () => {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       {import.meta.env.DEV && <Route path="/ui-kit" element={<UIKitPage />} />}
       <Route path="/sign-in/*" element={<SignInPage />} />
       <Route path="/sign-up/*" element={<SignUpPage />} />
@@ -33,10 +35,19 @@ const App = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<HomePage />} />
-        <Route path="/inbox" element={<ActivityPage key="inbox" kind="inbox"/>}/>
-        <Route path="/threads" element={<ActivityPage key="threads" kind="threads"/>}/>
-        <Route path="/saved" element={<ActivityPage key="saved" kind="saved"/>}/>
+        <Route path="/workspace" element={<HomePage />} />
+        <Route
+          path="/inbox"
+          element={<ActivityPage key="inbox" kind="inbox" />}
+        />
+        <Route
+          path="/threads"
+          element={<ActivityPage key="threads" kind="threads" />}
+        />
+        <Route
+          path="/saved"
+          element={<ActivityPage key="saved" kind="saved" />}
+        />
         <Route path="/rooms/:roomId" element={<RoomPage />} />
         <Route path="/join/:code" element={<JoinRoomPage />} />
       </Route>

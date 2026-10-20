@@ -1,0 +1,616 @@
+/* One WiseRoom language: the homepage's charcoal, ivory, orange and typography. */
+:root {
+  --canvas: #0f0c11;
+  --sidebar: #151118;
+  --paper: #1a161d;
+  --tint: #211a22;
+  --ink: #f4ede6;
+  --muted: #b9afa8;
+  --line: rgba(255, 240, 230, 0.08);
+  --edge: rgba(255, 240, 230, 0.14);
+  --accent: #ff5a1f;
+  --accent-hover: #ff7a3d;
+  --highlight: #ff5a1f1a;
+  --focus: #ff956a;
+  --ui-font: "Hanken Grotesk", sans-serif;
+  --display-font: "Bricolage Grotesque", sans-serif;
+  --meta-font: "JetBrains Mono", monospace;
+}
+.wiseroom-logo {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  overflow: visible;
+}
+.wiseroom-logo .logo-document {
+  transform-origin: 580px 510px;
+  animation: wr-document-enter 750ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.wiseroom-logo .logo-conversation {
+  transform-origin: 350px 540px;
+  animation: wr-conversation-enter 800ms 120ms cubic-bezier(0.2, 0.8, 0.2, 1)
+    both;
+}
+.wiseroom-logo .logo-letter {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: wr-letter-enter 900ms 250ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.brand:hover .logo-document,
+.brand:focus-visible .logo-document {
+  animation: wr-document-greet 600ms ease both;
+}
+.brand:hover .logo-letter,
+.brand:focus-visible .logo-letter {
+  animation: wr-letter-replay 650ms ease both;
+}
+@keyframes wr-document-enter {
+  from {
+    opacity: 0;
+    transform: translateY(85px) rotate(6deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes wr-conversation-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-85px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes wr-letter-enter {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes wr-letter-replay {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes wr-document-greet {
+  40% {
+    transform: rotate(-5deg) translateY(-20px);
+  }
+  to {
+    transform: none;
+  }
+}
+.brand-signature-mark {
+  background: transparent;
+  height: 38px;
+  flex-basis: 36px;
+}
+.brand-signature-mark .wiseroom-logo {
+  width: 38px;
+  height: 38px;
+}
+.brand-signature-name {
+  color: var(--ink);
+  font: 700 16px/1 var(--meta-font);
+  letter-spacing: -0.055em;
+}
+.brand-signature-name > .signature-dot {
+  color: var(--accent);
+}
+.brand-signature-caption {
+  font: 400 7px/1 var(--meta-font);
+  letter-spacing: 0.12em;
+  color: #998a80;
+}
+.brand:is(:hover, :focus-visible) .brand-signature-mark {
+  background: none;
+  transform: none;
+}
+.landing-page .brand .wiseroom-logo {
+  width: 30px;
+  height: 30px;
+}
+.sidebar-brand-row {
+  height: 70px;
+  min-height: 70px;
+}
+.workspace-shell .sidebar {
+  background: linear-gradient(180deg, #1a161d, #151118);
+}
+.sidebar .sidebar-search {
+  background: #100d13;
+  border-color: var(--edge);
+  border-radius: 10px;
+}
+.sidebar .room-nav-link {
+  min-height: 48px;
+  border-radius: 10px;
+}
+.sidebar .room-nav-link.active {
+  background: #ff5a1f17;
+  border-color: transparent;
+}
+.sidebar .room-nav-link.active strong {
+  color: #f4ede6;
+}
+.sidebar .sidebar-bottom {
+  border-color: var(--line);
+}
+.workspace-shell .workspace-topbar {
+  min-height: 62px;
+  background: #151118;
+  border-bottom-color: var(--line);
+}
+.workspace-shell .room-title-copy h1 {
+  color: #ff7a3d;
+  font: 600 15px var(--ui-font);
+}
+.workspace-shell .room-title-copy > span {
+  color: #9c9089;
+  font-size: 11px;
+}
+.workspace-shell .invite-button {
+  border-radius: 999px;
+  color: #1a0b04;
+}
+.workspace-shell .room-heading-actions .invite-button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a0b04;
+}
+.workspace-shell .room-heading-actions .invite-button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.workspace-shell .room-workspace {
+  margin: 10px 14px 14px;
+  border: 1px solid var(--edge);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #1a161d, #141016);
+  overflow: hidden;
+}
+.workspace-shell .chat-panel {
+  position: relative;
+  background: transparent;
+  min-width: 0;
+}
+.workspace-shell .chat-heading {
+  margin: 0;
+  min-height: 30px;
+  padding: 3px 22px 0;
+}
+.workspace-shell .refresh-messages {
+  font: 10px var(--meta-font);
+  color: #9d8f88;
+}
+.conversation-history {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.conversation-history .chat-scroll {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 24px 22px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #78665d66 transparent;
+}
+.conversation-history .message-list {
+  width: 100%;
+  max-width: 880px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.conversation-history .message {
+  flex: none;
+}
+.conversation-history .message + .message {
+  margin-top: 12px;
+}
+.workspace-shell .message-item {
+  gap: 12px;
+  padding: 5px 8px;
+  border-radius: 10px;
+}
+.workspace-shell .message-item .message-avatar {
+  width: 29px;
+  height: 29px;
+  flex-basis: 29px;
+  background: #9be3c4;
+  color: #24120c;
+  font: 700 10px var(--ui-font);
+}
+.workspace-shell .message-item.is-own .message-avatar {
+  background: #ffb38a;
+  color: #24120c;
+}
+.workspace-shell .message-meta strong,
+.workspace-shell .is-own .message-meta strong {
+  color: #f4ede6;
+  font-weight: 600;
+}
+.workspace-shell .message-meta time {
+  color: #9b8d85;
+  font: 11px var(--ui-font);
+}
+.workspace-shell .message-item .message-body {
+  color: #e2d9d2;
+  font: 400 14.5px/1.55 var(--ui-font);
+}
+.workspace-shell .date-separator {
+  color: #8e8078;
+  font-size: 9px;
+  margin-bottom: 20px;
+}
+.workspace-shell .date-separator::before,
+.workspace-shell .date-separator::after {
+  background: var(--line);
+}
+.workspace-shell .message-composer {
+  width: 100%;
+  max-width: none;
+  padding: 0 22px 20px 28px;
+}
+.workspace-shell .reference-composer {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "tools draft send";
+  gap: 9px;
+  min-height: 48px;
+  padding: 7px 10px;
+  border-radius: 14px;
+  background: #100c12aa;
+  border-color: var(--edge);
+}
+.workspace-shell .reference-composer > textarea {
+  min-height: 30px;
+  max-height: 160px;
+  padding: 5px 0;
+  font-size: 14px;
+  scrollbar-width: none;
+}
+.workspace-shell .reference-composer > .composer-tools {
+  align-self: center;
+  gap: 2px;
+}
+.workspace-shell .composer-edit-tools {
+  gap: 1px;
+}
+.workspace-shell .composer-shortcut {
+  display: none;
+}
+.workspace-shell .composer-send-group {
+  align-self: center;
+}
+.workspace-shell .reference-composer .send-button {
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 8px;
+}
+.workspace-shell .reference-composer .send-button > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.workspace-shell .typing-indicator {
+  min-height: 18px;
+  margin: 0;
+  padding: 0 28px;
+  color: #b9afa8;
+}
+.workspace-shell .reference-composer.is-recording {
+  grid-template-areas: "draft tools send";
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.workspace-shell .reference-composer.is-recording .recording-status {
+  font-size: 12px;
+}
+.room-context-panel {
+  flex: 0 0 270px;
+  width: 270px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 20px 16px;
+  border-left: 1px solid var(--line);
+  background: #100c1233;
+}
+.room-context-heading {
+  display: flex;
+  justify-content: space-between;
+  color: #a4978e;
+  font: 10px var(--meta-font);
+  letter-spacing: 0.14em;
+  margin-bottom: 18px;
+}
+.context-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 55%;
+  overflow-y: auto;
+}
+.context-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 11px;
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  background: #ffffff02;
+  color: var(--ink);
+  text-align: left;
+}
+.context-member:hover {
+  border-color: #ff5a1f66;
+  background: #ff5a1f08;
+}
+.context-member-copy {
+  flex: 1;
+  min-width: 0;
+}
+.context-member-copy strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 13px var(--ui-font);
+}
+.context-member-copy > span {
+  display: block;
+  margin-top: 4px;
+  color: #b9a398;
+  font: 10px var(--meta-font);
+}
+.context-member > svg {
+  color: #ff956a;
+}
+.context-room-note {
+  margin-top: 26px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.context-label {
+  font: 9px var(--meta-font);
+  letter-spacing: 0.12em;
+  color: #8f8078;
+}
+.context-room-note h2 {
+  font: 600 24px/1.1 var(--display-font);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.context-room-note p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.context-settings {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #ff956a;
+  font: 500 12px var(--ui-font);
+  margin-top: 16px;
+}
+.context-manage {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 16px 12px;
+  background: transparent;
+  border: 1px dashed var(--edge);
+  border-radius: 12px;
+  color: #b9afa8;
+  font: 500 12px var(--ui-font);
+}
+.context-manage:hover {
+  border-color: #ff5a1f77;
+  color: #f4ede6;
+}
+.message-rail-wrap {
+  flex: 0 0 28px;
+  width: 28px;
+  position: relative;
+  z-index: 6;
+  margin: 15px 0 18px;
+}
+.message-rail {
+  position: absolute;
+  inset: 0;
+  cursor: ns-resize;
+  touch-action: none;
+  outline-offset: -2px;
+  border-radius: 5px;
+}
+.message-rail-ruler {
+  position: absolute;
+  inset: 0 13px 0 9px;
+  opacity: 0.6;
+  background: repeating-linear-gradient(
+    to bottom,
+    #76675f66 0px,
+    #76675f66 2px,
+    transparent 2px,
+    transparent 9px
+  );
+}
+.message-rail-stop {
+  position: absolute;
+  left: 8px;
+  width: 10px;
+  height: 1px;
+  background: #9d877866;
+}
+.message-rail-stop.is-saved {
+  width: 14px;
+  background: #ff956a;
+}
+.message-rail-current {
+  position: absolute;
+  left: 5px;
+  width: 20px;
+  height: 2px;
+  transform: translateY(-1px);
+  background: #f4ede6;
+  box-shadow: 0 0 8px #f4ede633;
+}
+.message-rail:hover .message-rail-ruler,
+.message-rail:focus-visible .message-rail-ruler {
+  opacity: 1;
+}
+.message-rail-preview {
+  position: absolute;
+  z-index: 60;
+  top: clamp(0px, var(--preview-position), calc(100% - 130px));
+  left: 34px;
+  width: min(300px, calc(100vw - 95px));
+  padding: 13px 15px;
+  border: 1px solid #54453d;
+  border-radius: 12px;
+  background: #2c2528;
+  box-shadow: 0 8px 28px #0004;
+  pointer-events: none;
+}
+.message-rail-preview > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.message-rail-preview strong {
+  font: 600 12px var(--ui-font);
+  color: #f4ede6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.message-rail-preview p {
+  margin-top: 7px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font: 400 12px/1.5 var(--ui-font);
+  color: #c7bcb4;
+}
+.message-rail-preview > span {
+  display: block;
+  margin-top: 8px;
+  color: #a6968a;
+  font: 9px var(--meta-font);
+}
+.workspace-shell .directory-page.reference-home {
+  padding-top: 60px;
+}
+.workspace-shell .welcome-heading h1 {
+  font-size: clamp(36px, 3.6vw, 56px);
+}
+.workspace-shell .room-directory-list {
+  background: #1a161d;
+  border-color: var(--edge);
+  border-radius: 16px;
+}
+.workspace-shell .activity-feed,
+.workspace-shell .saved-messages {
+  border-color: var(--edge);
+}
+.modal {
+  border-color: var(--edge);
+  border-radius: 16px;
+  background: #1a161d;
+}
+.modal-heading h2 {
+  font-family: var(--display-font);
+  letter-spacing: -0.025em;
+}
+@media (max-width: 1250px) {
+  .room-context-panel {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .workspace-shell .room-workspace {
+    margin: 5px 6px 6px;
+    border-radius: 14px;
+  }
+  .workspace-shell .workspace-topbar {
+    min-height: 58px;
+  }
+  .conversation-history .chat-scroll {
+    padding: 12px 13px 15px 4px;
+  }
+  .message-rail-wrap {
+    flex-basis: 20px;
+    width: 20px;
+  }
+  .message-rail-ruler {
+    left: 6px;
+    right: 10px;
+  }
+  .message-rail-stop {
+    left: 5px;
+    width: 7px;
+  }
+  .message-rail-current {
+    left: 3px;
+    width: 15px;
+  }
+  .message-rail-preview {
+    left: 24px;
+  }
+  .workspace-shell .message-composer {
+    padding: 0 11px 12px;
+  }
+  .workspace-shell .reference-composer {
+    gap: 4px;
+    padding: 7px 6px;
+  }
+  .workspace-shell .reference-composer .icon-button,
+  .workspace-shell .reference-composer .voice-pill-button {
+    width: 24px;
+    min-width: 24px;
+  }
+  .workspace-shell .message-item {
+    gap: 9px;
+  }
+  .workspace-shell .message-item .message-body {
+    font-size: 14px;
+  }
+  .workspace-shell .directory-page.reference-home {
+    padding-top: 35px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiseroom-logo * {
+    animation: none !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
+  }
+}

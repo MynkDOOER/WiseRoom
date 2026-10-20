@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/clerk-react";
+import { authAppearance } from "../styles/authAppearance";
 import AuthLayout from "../components/AuthLayout";
 import { useSearchParams } from "react-router-dom";
 import { safeReturnPath } from "../utils/authReturn";
@@ -12,6 +13,7 @@ export default function SignUpPage() {
         path="/sign-up"
         signInUrl={`/sign-in?returnTo=${encodeURIComponent(returnTo)}`}
         forceRedirectUrl={returnTo}
+        appearance={authAppearance}
       />
     </AuthLayout>
   );

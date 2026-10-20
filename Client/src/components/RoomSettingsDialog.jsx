@@ -52,7 +52,11 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
         await onChanged();
         setFeedback("Room name updated.");
       }
-      if (kind === "pin-room") { await pinRoom(token, room.id, !room.pinned); await onChanged(); setFeedback(room.pinned ? "Room unpinned." : "Room pinned."); }
+      if (kind === "pin-room") {
+        await pinRoom(token, room.id, !room.pinned);
+        await onChanged();
+        setFeedback(room.pinned ? "Room unpinned." : "Room pinned.");
+      }
       if (kind === "reset-invite") {
         setInvite(await resetInvite(token, room.id));
         setConfirm(null);
@@ -89,8 +93,13 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
         busy={Boolean(busy)}
         className="room-settings-modal"
       >
-        <section className="settings-section"><h3>Navigation</h3><Button onClick={() => action("pin-room")} disabled={Boolean(busy)}>{room.pinned ? "Unpin room" : "Pin room"}</Button></section>
-          <section className="settings-section">
+        <section className="settings-section">
+          <h3>Navigation</h3>
+          <Button onClick={() => action("pin-room")} disabled={Boolean(busy)}>
+            {room.pinned ? "Unpin room" : "Pin room"}
+          </Button>
+        </section>
+        <section className="settings-section">
           <h3>Room picture</h3>
           <div className="settings-picture">
             <RoomAvatar name={room.name} src={room.avatarUrl} />

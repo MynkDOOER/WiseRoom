@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 const shades = [
-  ["#422054", "#F7F5FF"],
-  ["#302444", "#F7F5FF"],
-  ["#213449", "#F7F5FF"],
-  ["#36233F", "#F7F5FF"],
+  ["#FFB38A", "#24120C"],
+  ["#C9B8FF", "#24120C"],
+  ["#9BE3C4", "#24120C"],
+  ["#FBEFE2", "#24120C"],
 ];
 
 export default function MemberAvatar({ item, size = 32 }) {

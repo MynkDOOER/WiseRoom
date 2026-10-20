@@ -1,0 +1,91 @@
+/* Shared product language from the supplied WiseRoom landing reference. */
+:root {
+  color-scheme: dark;
+}
+.primary,
+.button.primary,
+.home-create,
+.send-button {
+  color: #1a0b04;
+}
+.workspace-shell {
+  background: var(--canvas);
+}
+.workspace-topbar {
+  background: #151118;
+  border-bottom-color: var(--line);
+}
+.workspace-shell .sidebar {
+  background: #151118;
+  border-right-color: var(--line);
+}
+.workspace-shell .reference-home {
+  background:
+    radial-gradient(ellipse 70% 42% at 30% 0%, #ff5a1f08, transparent 80%),
+    var(--canvas);
+}
+.workspace-shell .welcome-heading h1 {
+  font-family: var(--display-font);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+.workspace-shell .home-actions .primary {
+  box-shadow: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+}
+.workspace-shell .nav-link.active {
+  background: #ff5a1f12;
+  color: #f4ede6;
+}
+.workspace-shell .nav-link.active > svg {
+  color: #ff7a3d;
+}
+.workspace-shell .room-nav-link.active {
+  border-color: #ff5a1f26;
+}
+.workspace-shell .reference-composer {
+  background: #1a161d;
+  border-color: var(--edge);
+}
+.workspace-shell .reference-composer:focus-within {
+  border-color: #ff7a3d99;
+  outline-color: #ff5a1f24;
+  box-shadow: none;
+}
+.workspace-shell .reference-composer .send-button:not(:disabled) {
+  background: #ff5a1f;
+  border-color: #ff5a1f;
+  color: #1a0b04;
+}
+.workspace-shell .reference-composer .send-button:hover:not(:disabled) {
+  background: #ff7a3d;
+}
+.brand-signature-name {
+  font-family: "JetBrains Mono", monospace;
+}
+.auth-entry {
+  min-height: 100dvh;
+}
+.auth-entry .signin {
+  min-height: 100dvh;
+  padding-top: 160px;
+  border-top: 0;
+}
+.auth-entry .signin .inner {
+  min-height: calc(100dvh - 250px);
+}
+.auth-entry .auth-home {
+  margin-right: auto;
+}
+.auth-entry .clerk-host {
+  min-height: 420px;
+}
+@media (max-width: 700px) {
+  .auth-entry .signin {
+    padding-top: 120px;
+  }
+  .auth-entry .signin .inner {
+    gap: 30px;
+  }
+}

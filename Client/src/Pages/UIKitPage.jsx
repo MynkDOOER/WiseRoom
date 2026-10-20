@@ -9,11 +9,11 @@ import Icon from "../components/Icon";
 import MessageContent from "../components/MessageContent";
 
 const colors = [
-  ["Canvas", "#0D0B11", "--canvas"],
-  ["Paper", "#15121B", "--paper"],
-  ["Ink", "#E9E4EE", "--ink"],
-  ["Violet", "#AC45F3", "--accent"],
-  ["Highlight", "#2D1E3E", "--highlight"],
+  ["Canvas", "#0F0C11", "--canvas"],
+  ["Paper", "#1A161D", "--paper"],
+  ["Ivory", "#F4EDE6", "--ink"],
+  ["Orange", "#FF5A1F", "--accent"],
+  ["Highlight", "#392018", "--highlight"],
 ];
 export default function UIKitPage() {
   const [dialog, setDialog] = useState(false);
@@ -26,11 +26,11 @@ export default function UIKitPage() {
           <Badge tone="accent">WiseRoom / UI kit</Badge>
           <h1>Built to talk.</h1>
           <p>
-            Quiet surfaces, focused conversations. These are the
-            same components used by the app.
+            Quiet surfaces, focused conversations. These are the same components
+            used by the app.
           </p>
         </div>
-        <Link className="button secondary" to="/">
+        <Link className="button secondary" to="/workspace">
           Open workspace
           <Icon name="arrow" />
         </Link>
@@ -58,8 +58,8 @@ export default function UIKitPage() {
             A clear place for your conversations.
           </p>
           <p className="kit-space">
-            JetBrains Mono for the interface, messages, and code. Fira Code for
-            small labels and metadata.
+            Bricolage Grotesque for display headings. Hanken Grotesk for the
+            interface and messages. JetBrains Mono for code and small labels.
           </p>
           <p className="kit-caption">
             Body 15px · Metadata 12px · Headings 600–800 · Comfortable line
@@ -158,9 +158,9 @@ export default function UIKitPage() {
         <h2>06 / Interaction rules</h2>
         <div className="kit-sample">
           <p>
-            Soft outlines on surfaces. Left-aligned messages. Visible
-            keyboard focus. Generous touch targets. Color always paired with
-            labels. Motion follows your system preference.
+            Soft outlines on surfaces. Left-aligned messages. Visible keyboard
+            focus. Generous touch targets. Color always paired with labels.
+            Motion follows your system preference.
           </p>
         </div>
       </section>

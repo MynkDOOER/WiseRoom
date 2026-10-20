@@ -101,3 +101,6 @@ Voice backend layers:
 - Local recordings are immutable generated files under ignored `Server/data/voice/`. Back up this directory with the database. Before deployment, provide durable shared storage and a retention/orphan cleanup policy; a process crash between writing a file and inserting its row can leave an orphan. There is no automatic transcoding. Container checks are not a full media decode; client duration is descriptive metadata, while file size is enforced independently.
 
 Checks: frontend lint/build, 3 frontend tests, 65 backend tests (including 13 voice tests), and patch whitespace. Live UI checks include desktop/mobile composer, font mapping, expression insertion, code insertion and maximum-length validation. The user confirmed live recording/playback in their browser. No Socket.IO or realtime work was added. No secrets were printed or copied.
+
+## Reference UI and collaboration update
+See REPORT-REFERENCE-UPDATE.md for the current screenshot design, approved collaboration features, migration, API routes, verification and deployment limits. This supersedes the earlier theme and composer descriptions. Current checks: 82 backend tests and 15 frontend tests, plus lint/build and desktop/mobile verification.

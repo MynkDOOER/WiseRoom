@@ -1,13 +1,44 @@
 const paths = {
-  play: <path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none"/>,
-  pause: <><path d="M8 5v14M16 5v14" strokeWidth="4"/></>,
-  home: <><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></>,
-  inbox: <><path d="m5 4-3 12v4h20v-4L19 4Z"/><path d="M2 15h6l2 3h4l2-3h6"/></>,
-  bookmark: <path d="M6 3h12v18l-6-4-6 4Z"/>,
-  pin: <><path d="m8 3 8 0-1 7 4 4H5l4-4ZM12 14v8"/></>,
-  panel: <><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></>,
-  bell: <><path d="M5 17h14l-2-4V9a5 5 0 0 0-10 0v4ZM10 21h4"/></>,
-  link: <><path d="m10 8 3-3a4 4 0 0 1 6 6l-3 3m-2 2-3 3a4 4 0 0 1-6-6l3-3m0 4 8-8"/></>,
+  play: <path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none" />,
+  pause: (
+    <>
+      <path d="M8 5v14M16 5v14" strokeWidth="4" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="m3 10 9-7 9 7v10H3Z" />
+      <path d="M9 20v-7h6v7" />
+    </>
+  ),
+  inbox: (
+    <>
+      <path d="m5 4-3 12v4h20v-4L19 4Z" />
+      <path d="M2 15h6l2 3h4l2-3h6" />
+    </>
+  ),
+  bookmark: <path d="M6 3h12v18l-6-4-6 4Z" />,
+  pin: (
+    <>
+      <path d="m8 3 8 0-1 7 4 4H5l4-4ZM12 14v8" />
+    </>
+  ),
+  panel: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M5 17h14l-2-4V9a5 5 0 0 0-10 0v4ZM10 21h4" />
+    </>
+  ),
+  link: (
+    <>
+      <path d="m10 8 3-3a4 4 0 0 1 6 6l-3 3m-2 2-3 3a4 4 0 0 1-6-6l3-3m0 4 8-8" />
+    </>
+  ),
 
   code: (
     <>

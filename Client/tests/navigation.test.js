@@ -12,7 +12,7 @@ test("sign-in return paths only allow local six-character invitation paths", () 
     "/join/ABC123/extra",
     "/rooms/anything",
   ])
-    assert.equal(safeReturnPath(value), "/");
+    assert.equal(safeReturnPath(value), "/workspace");
 });
 test("invitation entry accepts codes and same-origin links", () => {
   const origin = "https://wiseroom.example";

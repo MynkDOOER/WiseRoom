@@ -1,9 +1,19 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getMessages, sendMessage, sendVoiceMessage } from "../api/messages";
 import Icon from "./Icon";
+import { messageWindow } from "../utils/messageWindow";
 import MessageItem from "./MessageItem";
+import MessageRail from "./MessageRail";
 import ThreadPanel from "./ThreadPanel";
 import { getChanges, markRoomRead, notifyActivity } from "../api/collaboration";
 
@@ -13,13 +23,27 @@ import useVoiceRecorder from "../hooks/useVoiceRecorder";
 
 const accessDenied = (error) => [401, 403, 404].includes(error.status);
 
-export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMembers=[], onTyping=()=>{} }) {
-  const [params,setParams]=useSearchParams();
-  const [search,setSearch]=useState("");
-  const [newCount,setNewCount]=useState(0);
-  const sync=useRef(null),lastRead=useRef(null),messagesRef=useRef([]);
-  const threadId=params.get("thread");
-  const openThread=id=>setParams(current=>{const next=new URLSearchParams(current);if(id)next.set("thread",id);else next.delete("thread");return next;});
+export default function ChatPanel({
+  roomId,
+  roomName,
+  searchOpen = false,
+  typingMembers = [],
+  onTyping = () => {},
+}) {
+  const [params, setParams] = useSearchParams();
+  const [search, setSearch] = useState("");
+  const [newCount, setNewCount] = useState(0);
+  const sync = useRef(null),
+    lastRead = useRef(null),
+    messagesRef = useRef([]);
+  const threadId = params.get("thread");
+  const openThread = (id) =>
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (id) next.set("thread", id);
+      else next.delete("thread");
+      return next;
+    });
   const { getToken } = useAuth();
   const [messages, setMessages] = useState([]);
   const [pagination, setPagination] = useState({
@@ -37,13 +61,25 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
   const selection = useRef({ start: 0, end: 0 });
   const voiceBusy = recorder.status !== "idle";
   const scrollRef = useRef(null);
+  const stickToLatest = useRef(true);
+  const historyId = useId();
   const draftRef = useRef(null);
   const controllerRef = useRef(null);
   const operations = useRef({ older: false, sending: false });
   const scrollChange = useRef(null);
 
-  const updateMessage=useCallback(updated=>setMessages(current=>current.map(message=>message.id===updated.id?updated:message)),[]);
-  useEffect(()=>{messagesRef.current=messages;},[messages]);
+  const updateMessage = useCallback(
+    (updated) =>
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === updated.id ? updated : message,
+        ),
+      ),
+    [],
+  );
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,10 +93,15 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
         });
         if (controller.signal.aborted) return;
         scrollChange.current = { mode: "bottom" };
-        sync.current=page.syncCursor;
+        sync.current = page.syncCursor;
         setMessages(page.messages);
-        const latest=page.messages.at(-1);
-        if(latest&&!document.hidden){lastRead.current=latest.id;markRoomRead(token,roomId,latest.id).then(notifyActivity).catch(()=>{});}
+        const latest = page.messages.at(-1);
+        if (latest && !document.hidden) {
+          lastRead.current = latest.id;
+          markRoomRead(token, roomId, latest.id)
+            .then(notifyActivity)
+            .catch(() => {});
+        }
         setPagination(page.pagination);
         setLoading({ status: "ready" });
       } catch (error) {
@@ -77,49 +118,107 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
     return () => controller.abort();
   }, [getToken, roomId, attempt]);
 
-  useEffect(()=>{
-    if(loading.status!=="ready")return;
-    const controller=new AbortController();let pending=false;
-    async function poll(){
-      if(pending||document.hidden||operations.current.sending||operations.current.older)return;
-      pending=true;
-      try{
-        const token=await getToken();if(controller.signal.aborted)return;
-        const page=await getMessages(token,roomId,{limit:100,signal:controller.signal});
-        if(controller.signal.aborted)return;
-        let additions=page.messages;
-        const current=messagesRef.current,ids=new Set(current.map(row=>row.id));
-        const overlap=page.messages.some(row=>ids.has(row.id));
+  useEffect(() => {
+    if (loading.status !== "ready") return;
+    const controller = new AbortController();
+    let pending = false;
+    async function poll() {
+      if (
+        pending ||
+        document.hidden ||
+        operations.current.sending ||
+        operations.current.older
+      )
+        return;
+      pending = true;
+      try {
+        const token = await getToken();
+        if (controller.signal.aborted) return;
+        const page = await getMessages(token, roomId, {
+          limit: 100,
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
+        const current = messagesRef.current,
+          ids = new Set(current.map((row) => row.id));
+        // A larger polling window may contain older history; it is not new activity.
+        let additions = messageWindow(current, page.messages);
+        const overlap = page.messages.some((row) => ids.has(row.id));
         // Catch up through the forward cursor when more than one page arrived.
-        if(sync.current&&!overlap&&page.pagination.hasMore){
-          additions=[];
-          for(let count=0;count<5;count++){
-            const next=await getChanges(token,roomId,sync.current,controller.signal);
-            if(controller.signal.aborted)return;
-            additions.push(...next.messages);sync.current=next.syncCursor;
-            if(!next.hasMore)break;
+        if (sync.current && !overlap && page.pagination.hasMore) {
+          additions = [];
+          for (let count = 0; count < 5; count++) {
+            const next = await getChanges(
+              token,
+              roomId,
+              sync.current,
+              controller.signal,
+            );
+            if (controller.signal.aborted) return;
+            additions.push(...next.messages);
+            sync.current = next.syncCursor;
+            if (!next.hasMore) break;
           }
-        }else sync.current=page.syncCursor;
-        const element=scrollRef.current;
-        const atBottom=element&&element.scrollHeight-element.scrollTop-element.clientHeight<100;
-        const fresh=additions.filter(row=>!ids.has(row.id));
-        if(fresh.length&&atBottom)scrollChange.current={mode:"bottom"};
-        else if(fresh.length)setNewCount(value=>value+fresh.length);
-        setMessages(previous=>[...new Map([...previous,...additions].map(row=>[row.id,row])).values()].sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)||a.id.localeCompare(b.id)));
-        const latest=additions.at(-1);
-        if(latest&&atBottom&&lastRead.current!==latest.id){lastRead.current=latest.id;await markRoomRead(token,roomId,latest.id);notifyActivity();}
-      }catch(error){if(!controller.signal.aborted&&accessDenied(error)){setMessages([]);setLoading({status:"denied",message:error.message});}}
-      finally{pending=false;}
+        } else sync.current = page.syncCursor;
+        const element = scrollRef.current;
+        const atBottom =
+          element &&
+          element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+        const fresh = additions.filter((row) => !ids.has(row.id));
+        if (atBottom) setNewCount(0);
+        if (fresh.length && atBottom) scrollChange.current = { mode: "bottom" };
+        else if (fresh.length) setNewCount((value) => value + fresh.length);
+        setMessages((previous) =>
+          [
+            ...new Map(
+              [...previous, ...additions].map((row) => [row.id, row]),
+            ).values(),
+          ].sort(
+            (a, b) =>
+              new Date(a.createdAt) - new Date(b.createdAt) ||
+              a.id.localeCompare(b.id),
+          ),
+        );
+        const latest = additions.at(-1);
+        if (latest && atBottom && lastRead.current !== latest.id) {
+          lastRead.current = latest.id;
+          await markRoomRead(token, roomId, latest.id);
+          notifyActivity();
+        }
+      } catch (error) {
+        if (!controller.signal.aborted && accessDenied(error)) {
+          setMessages([]);
+          setLoading({ status: "denied", message: error.message });
+        }
+      } finally {
+        pending = false;
+      }
     }
-    const timer=setInterval(poll,6000);
-    const focus=()=>{if(!document.hidden)poll();};document.addEventListener("visibilitychange",focus);
-    return()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",focus);};
-  },[getToken,roomId,loading.status]);
+    const timer = setInterval(poll, 6000);
+    const focus = () => {
+      if (!document.hidden) poll();
+    };
+    document.addEventListener("visibilitychange", focus);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", focus);
+    };
+  }, [getToken, roomId, loading.status]);
 
-  function jumpToLatest(){
-    const element=scrollRef.current;if(element)element.scrollTop=element.scrollHeight;
-    setNewCount(0);const latest=messagesRef.current.at(-1);
-    if(latest&&lastRead.current!==latest.id){lastRead.current=latest.id;getToken().then(token=>markRoomRead(token,roomId,latest.id)).then(notifyActivity).catch(()=>{});}
+  function jumpToLatest() {
+    stickToLatest.current = true;
+    const element = scrollRef.current;
+    if (element) element.scrollTop = element.scrollHeight;
+    setNewCount(0);
+    const latest = messagesRef.current.at(-1);
+    if (latest && lastRead.current !== latest.id) {
+      lastRead.current = latest.id;
+      getToken()
+        .then((token) => markRoomRead(token, roomId, latest.id))
+        .then(notifyActivity)
+        .catch(() => {});
+    }
   }
 
   useLayoutEffect(() => {
@@ -133,10 +232,27 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
     const element = scrollRef.current;
     const change = scrollChange.current;
     if (!element || !change) return;
-    if (change.mode === "bottom") element.scrollTop = element.scrollHeight;
-    else element.scrollTop = change.top + element.scrollHeight - change.height;
+    if (change.mode === "bottom") {
+      stickToLatest.current = true;
+      element.scrollTop = element.scrollHeight;
+    } else
+      element.scrollTop = change.top + element.scrollHeight - change.height;
     scrollChange.current = null;
   }, [messages]);
+
+  // Keep the latest message anchored as fonts/code/composer sizes settle.
+  // Readers who scroll into history keep their current position instead.
+  useEffect(() => {
+    const element = scrollRef.current;
+    const list = element?.querySelector(".message-list");
+    if (!element || !list) return;
+    const resize = new ResizeObserver(() => {
+      if (stickToLatest.current) element.scrollTop = element.scrollHeight;
+    });
+    resize.observe(element);
+    resize.observe(list);
+    return () => resize.disconnect();
+  }, [loading.status, messages.length]);
 
   function refresh() {
     if (voiceBusy || operations.current.older || operations.current.sending)
@@ -313,6 +429,19 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
     }
   }
 
+  const visibleMessages = useMemo(
+    () =>
+      messages.filter(
+        (message) =>
+          !searchOpen ||
+          !search.trim() ||
+          `${message.body} ${message.author.displayName}`
+            .toLowerCase()
+            .includes(search.trim().toLowerCase()),
+      ),
+    [messages, search, searchOpen],
+  );
+
   return (
     <section className="chat-panel" aria-labelledby="conversation-heading">
       <div className="section-heading chat-heading">
@@ -329,7 +458,30 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
           Refresh latest
         </button>
       </div>
-      {searchOpen&&<div className="message-search"><label className="sr-only" htmlFor="loaded-message-search">Search loaded messages</label><Icon name="search" size={14}/><input id="loaded-message-search" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search loaded messages…"/><span>{messages.filter(message=>`${message.body} ${message.author.displayName}`.toLowerCase().includes(search.toLowerCase())).length} found</span></div>}
+      {searchOpen && (
+        <div className="message-search">
+          <label className="sr-only" htmlFor="loaded-message-search">
+            Search loaded messages
+          </label>
+          <Icon name="search" size={14} />
+          <input
+            id="loaded-message-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search loaded messages…"
+          />
+          <span>
+            {
+              messages.filter((message) =>
+                `${message.body} ${message.author.displayName}`
+                  .toLowerCase()
+                  .includes(search.toLowerCase()),
+              ).length
+            }{" "}
+            found
+          </span>
+        </div>
+      )}
       {loading.status === "loading" ? (
         <p className="chat-notice muted" role="status">
           Loading messages…
@@ -337,7 +489,7 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
       ) : loading.status === "denied" ? (
         <div className="chat-notice" role="alert">
           <p>{loading.message}</p>
-          <Link to="/" className="back-link">
+          <Link to="/workspace" className="back-link">
             Back to your rooms
           </Link>
         </div>
@@ -368,44 +520,120 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
               {olderError} Use “Load older messages” to retry.
             </p>
           )}
-          <div
-            className="chat-scroll"
-            ref={scrollRef}
-            tabIndex={0}
-            role="region"
-            aria-label="Message history"
-            aria-busy={loadingOlder}
-            onScroll={(event) => {
-              if (event.currentTarget.scrollTop <= 50 && !olderError)
-                loadOlder();
-            }}
-          >
-            {messages.length === 0 ? (
-              <div className="chat-empty">
-                <span className="empty-icon">
-                  <Icon name="chat" size={28} />
+          <div className="conversation-history">
+            <MessageRail
+              messages={visibleMessages}
+              scrollRef={scrollRef}
+              historyId={historyId}
+            />
+            <div
+              id={historyId}
+              className="chat-scroll"
+              ref={scrollRef}
+              tabIndex={0}
+              role="region"
+              aria-label="Message history"
+              aria-busy={loadingOlder}
+              onScroll={(event) => {
+                stickToLatest.current =
+                  event.currentTarget.scrollHeight -
+                    event.currentTarget.scrollTop -
+                    event.currentTarget.clientHeight <
+                  25;
+                if (
+                  newCount > 0 &&
+                  event.currentTarget.scrollHeight -
+                    event.currentTarget.scrollTop -
+                    event.currentTarget.clientHeight <
+                    25
+                )
+                  jumpToLatest();
+                if (event.currentTarget.scrollTop <= 50 && !olderError)
+                  loadOlder();
+              }}
+            >
+              {messages.length === 0 ? (
+                <div className="chat-empty">
+                  <span className="empty-icon">
+                    <Icon name="chat" size={28} />
+                  </span>
+                  <p className="eyebrow">A LITTLE ROOM FOR SOMETHING GOOD</p>
+                  <h3>This is where it starts.</h3>
+                  <p className="muted">
+                    A thought, a question, a simple hello.
+                    <br />
+                    Make the first move.
+                  </p>
+                </div>
+              ) : (
+                <ol className="message-list">
+                  {visibleMessages.map((message, index, array) => {
+                    const previous = array[index - 1],
+                      date = new Date(message.createdAt);
+                    const sameDay =
+                      previous &&
+                      new Date(previous.createdAt).toDateString() ===
+                        date.toDateString();
+                    const grouped =
+                      sameDay &&
+                      previous.author.id === message.author.id &&
+                      date - new Date(previous.createdAt) <= 300000;
+                    return (
+                      <li
+                        className="message"
+                        key={message.id}
+                        data-message-id={message.id}
+                      >
+                        {!sameDay && (
+                          <div className="date-separator">
+                            <span>
+                              {date.toDateString() === new Date().toDateString()
+                                ? "Today"
+                                : date.toLocaleDateString(undefined, {
+                                    weekday: "short",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                            </span>
+                          </div>
+                        )}
+                        <MessageItem
+                          message={message}
+                          grouped={grouped}
+                          onUpdated={updateMessage}
+                          onThread={openThread}
+                        />
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </div>
+          </div>
+          {newCount > 0 && (
+            <button
+              type="button"
+              className="new-messages-button"
+              onClick={jumpToLatest}
+            >
+              {newCount} new {newCount === 1 ? "message" : "messages"} ↓
+            </button>
+          )}
+          <div className="typing-indicator" role="status">
+            {typingMembers.length > 0 && (
+              <>
+                <span className="typing-dots">
+                  <i />
+                  <i />
+                  <i />
                 </span>
-                <p className="eyebrow">A LITTLE ROOM FOR SOMETHING GOOD</p>
-                <h3>This is where it starts.</h3>
-                <p className="muted">
-                  A thought, a question, a simple hello.
-                  <br />
-                  Make the first move.
-                </p>
-              </div>
-            ) : (
-              <ol className="message-list">
-                {messages.filter(message=>!searchOpen||!search.trim()||`${message.body} ${message.author.displayName}`.toLowerCase().includes(search.trim().toLowerCase())).map((message,index,array)=>{
-                  const previous=array[index-1],date=new Date(message.createdAt);
-                  const sameDay=previous&&new Date(previous.createdAt).toDateString()===date.toDateString();
-                  const grouped=sameDay&&previous.author.id===message.author.id&&date-new Date(previous.createdAt)<=300000;
-                  return <li className="message" key={message.id}>{!sameDay&&<div className="date-separator"><span>{date.toDateString()===new Date().toDateString()?"Today":date.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}</span></div>}<MessageItem message={message} grouped={grouped} onUpdated={updateMessage} onThread={openThread}/></li>;
-                })}
-              </ol>
+                {typingMembers
+                  .map((member) => member.name.split(" ")[0])
+                  .join(", ")}{" "}
+                {typingMembers.length === 1 ? "is" : "are"} typing…
+              </>
             )}
           </div>
-          {newCount>0&&<button type="button" className="new-messages-button" onClick={jumpToLatest}>{newCount} new {newCount===1?"message":"messages"} ↓</button>}
-          <div className="typing-indicator" role="status">{typingMembers.length>0&&<><span className="typing-dots"><i/><i/><i/></span>{typingMembers.map(member=>member.name.split(" ")[0]).join(", ")} {typingMembers.length===1?"is":"are"} typing…</>}</div>
           <form className="message-composer" onSubmit={submit}>
             {recorder.preview && (
               <div className="voice-preview">
@@ -437,12 +665,87 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
                 </div>
               </div>
             )}
-            <div className={`composer-input reference-composer ${voiceBusy?"is-recording":""}`}>
-              <label className="sr-only" htmlFor="message-draft">Message your room</label>
-              <textarea ref={draftRef} id="message-draft" value={draft} onChange={event=>{setDraft(event.target.value);onTyping(Boolean(event.target.value.trim()));}} onSelect={event=>{selection.current={start:event.target.selectionStart,end:event.target.selectionEnd};}} onKeyDown={handleKeyDown} placeholder={`Message ${roomName || "your room"}`} maxLength={4000} rows={1} readOnly={sending||voiceBusy} disabled={loadingOlder} aria-describedby="composer-hint"/>
-              {voiceBusy&&<span className="recording-status" role="status">{recorder.status==="requesting"?"Waiting for microphone…":recorder.status==="recording"?"Recording…":"Preparing preview…"}</span>}
-              <div className="composer-tools"><div className="composer-edit-tools"><ComposerTools disabled={sending||loadingOlder||voiceBusy} insert={insert} remaining={4000-draft.length}/></div><VoicePill recorder={recorder} disabled={sending||loadingOlder||Boolean(recorder.preview)}/>{voiceBusy&&<button type="button" className="icon-button" aria-label="Cancel recording" onClick={()=>recorder.stop(true)}><Icon name="close" size={16}/></button>}</div>
-              <div className="composer-send-group"><span className="composer-shortcut" title="Shift + Enter for a new line"><kbd>⇧</kbd><kbd>↵</kbd>new line</span><button className="send-button" disabled={!draft.trim()||sending||loadingOlder||voiceBusy} aria-label={sending?"Sending message":"Send message"}><span>{sending?"Sending…":"Send"}</span><Icon name="arrow" size={15}/></button></div>
+            <div
+              className={`composer-input reference-composer ${voiceBusy ? "is-recording" : ""}`}
+            >
+              <label className="sr-only" htmlFor="message-draft">
+                Message your room
+              </label>
+              <textarea
+                ref={draftRef}
+                id="message-draft"
+                value={draft}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  onTyping(Boolean(event.target.value.trim()));
+                }}
+                onSelect={(event) => {
+                  selection.current = {
+                    start: event.target.selectionStart,
+                    end: event.target.selectionEnd,
+                  };
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder={`Message ${roomName || "your room"}`}
+                maxLength={4000}
+                rows={1}
+                readOnly={sending || voiceBusy}
+                disabled={loadingOlder}
+                aria-describedby="composer-hint"
+              />
+              {voiceBusy && (
+                <span className="recording-status" role="status">
+                  {recorder.status === "requesting"
+                    ? "Waiting for microphone…"
+                    : recorder.status === "recording"
+                      ? "Recording…"
+                      : "Preparing preview…"}
+                </span>
+              )}
+              <div className="composer-tools">
+                <div className="composer-edit-tools">
+                  <ComposerTools
+                    disabled={sending || loadingOlder || voiceBusy}
+                    insert={insert}
+                    remaining={4000 - draft.length}
+                  />
+                </div>
+                <VoicePill
+                  recorder={recorder}
+                  disabled={
+                    sending || loadingOlder || Boolean(recorder.preview)
+                  }
+                />
+                {voiceBusy && (
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label="Cancel recording"
+                    onClick={() => recorder.stop(true)}
+                  >
+                    <Icon name="close" size={16} />
+                  </button>
+                )}
+              </div>
+              <div className="composer-send-group">
+                <span
+                  className="composer-shortcut"
+                  title="Shift + Enter for a new line"
+                >
+                  <kbd>⇧</kbd>
+                  <kbd>↵</kbd>new line
+                </span>
+                <button
+                  className="send-button"
+                  disabled={
+                    !draft.trim() || sending || loadingOlder || voiceBusy
+                  }
+                  aria-label={sending ? "Sending message" : "Send message"}
+                >
+                  <span>{sending ? "Sending…" : "Send"}</span>
+                  <Icon name="arrow" size={15} />
+                </button>
+              </div>
             </div>
             {recorder.error && (
               <p className="form-error" role="alert">
@@ -464,7 +767,16 @@ export default function ChatPanel({ roomId, roomName, searchOpen=false, typingMe
               </span>
             )}
           </form>
-          {threadId&&<ThreadPanel key={threadId} roomId={roomId} messageId={threadId} onClose={()=>openThread(null)} onParentUpdated={updateMessage}/>}
+          {threadId && (
+            <ThreadPanel
+              key={threadId}
+              roomId={roomId}
+              messageId={threadId}
+              onClose={() => openThread(null)}
+              onParentUpdated={updateMessage}
+              onTyping={onTyping}
+            />
+          )}
         </>
       )}
     </section>

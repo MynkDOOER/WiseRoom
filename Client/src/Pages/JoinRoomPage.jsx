@@ -79,7 +79,7 @@ function JoinRoomDetails({ code }) {
             >
               Try again
             </Button>
-            <Link className="back-link" to="/">
+            <Link className="back-link" to="/workspace">
               Back to workspace
             </Link>
           </>
@@ -129,7 +129,7 @@ function JoinRoomDetails({ code }) {
                 {error}
               </p>
             )}
-            <Link className="back-link" to="/">
+            <Link className="back-link" to="/workspace">
               Back to workspace
             </Link>
           </>
