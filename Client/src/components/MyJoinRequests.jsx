@@ -40,7 +40,7 @@ export default function MyJoinRequests() {
     }
   }
   return (
-    <section className="my-requests">
+    <section className="my-requests" id="my-requests">
       <div className="section-heading">
         <h2>Your join requests</h2>
         <button

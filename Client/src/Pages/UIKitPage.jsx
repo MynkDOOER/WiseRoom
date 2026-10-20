@@ -9,11 +9,11 @@ import Icon from "../components/Icon";
 import MessageContent from "../components/MessageContent";
 
 const colors = [
-  ["Canvas", "#02060E", "--canvas"],
-  ["Paper", "#141020", "--paper"],
-  ["Ink", "#F7F5FF", "--ink"],
-  ["Violet", "#9303C5", "--accent"],
-  ["Highlight", "#351444", "--highlight"],
+  ["Canvas", "#0D0B11", "--canvas"],
+  ["Paper", "#15121B", "--paper"],
+  ["Ink", "#E9E4EE", "--ink"],
+  ["Violet", "#AC45F3", "--accent"],
+  ["Highlight", "#2D1E3E", "--highlight"],
 ];
 export default function UIKitPage() {
   const [dialog, setDialog] = useState(false);
@@ -26,7 +26,7 @@ export default function UIKitPage() {
           <Badge tone="accent">WiseRoom / UI kit</Badge>
           <h1>Built to talk.</h1>
           <p>
-            Neo-brutalist foundations, readable conversations. These are the
+            Quiet surfaces, focused conversations. These are the
             same components used by the app.
           </p>
         </div>
@@ -158,7 +158,7 @@ export default function UIKitPage() {
         <h2>06 / Interaction rules</h2>
         <div className="kit-sample">
           <p>
-            Hard shadows on actions and overlays. Quiet messages. Visible
+            Soft outlines on surfaces. Left-aligned messages. Visible
             keyboard focus. Generous touch targets. Color always paired with
             labels. Motion follows your system preference.
           </p>

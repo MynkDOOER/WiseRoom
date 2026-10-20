@@ -7,6 +7,8 @@ import {
   useParams,
   useOutletContext,
 } from "react-router-dom";
+import { pinRoom } from "../api/collaboration";
+import useRoomPresence from "../hooks/useRoomPresence";
 import { getInvite, getMembers, getRoom, leaveRoom } from "../api/rooms";
 import { useWorkspace } from "../context/workspaceContext";
 import ChatPanel from "../components/ChatPanel";
@@ -38,7 +40,7 @@ function RoomDetails({ roomId }) {
     compactHeaderSnapshot,
     () => false,
   );
-  const { headerSlot } = useOutletContext();
+  const { headerSlot, openSwitcher } = useOutletContext();
   const { getToken, userId } = useAuth();
   const { user } = useUser();
   const { refreshRooms } = useWorkspace();
@@ -54,7 +56,9 @@ function RoomDetails({ roomId }) {
   const [copied, setCopied] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [peopleOpen, setPeopleOpen] = useState(false);
+  const [peopleOpen, setPeopleOpen] = useState(() => new URLSearchParams(window.location.search).get("panel") === "requests");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const presence = useRoomPresence(roomId, Boolean(result?.room));
   const membersAnchor = useRef(null);
 
   useEffect(() => {
@@ -102,6 +106,7 @@ function RoomDetails({ roomId }) {
     }
   }
   async function showInvite() {
+    if (result?.room?.role !== "OWNER") return;
     setMembersPosition(membersAnchor.current?.getBoundingClientRect());
     setMembersOpen(true);
     setBusy("invite");
@@ -180,12 +185,12 @@ function RoomDetails({ roomId }) {
             createPortal(
               <div className="compact-room-heading">
                 <div className="compact-room-title">
-                  <RoomAvatar name={room.name} src={room.avatarUrl} />
+                  <button className="room-switch-trigger" aria-label="Switch rooms" title="Switch rooms" onClick={openSwitcher}><RoomAvatar name={room.name} src={room.avatarUrl}/></button>
                   <div className="room-title-copy">
                     <h1>{room.name}</h1>
                     <span>
                       {result.members.length}{" "}
-                      {result.members.length === 1 ? "member" : "members"}
+                      {result.members.length === 1 ? "member" : "members"}{presence.online.length > 0 && <> · <i className="online-dot"/>{presence.online.length} online</>}
                     </span>
                   </div>
                 </div>
@@ -213,6 +218,8 @@ function RoomDetails({ roomId }) {
                       </button>
                     )}
                   </div>
+                  <button className="icon-button room-search-button" aria-label="Search messages" title="Search loaded messages" onClick={()=>setSearchOpen(value=>!value)}><Icon name="search" size={16}/></button>
+                  <button className={`icon-button ${room.pinned ? "is-pinned" : ""}`} aria-label={room.pinned ? "Unpin room" : "Pin room"} title={room.pinned ? "Unpin room" : "Pin room"} onClick={async()=>{try{await pinRoom(await getToken(),roomId,!room.pinned);await refreshRoomDetails();}catch(error){setActionError(error.message);}}}><Icon name="pin" size={16}/></button>
                   {room.role === "OWNER" && (
                     <button
                       aria-label="Invite"
@@ -238,7 +245,7 @@ function RoomDetails({ roomId }) {
               headerSlot,
             )}
           <div className="room-workspace">
-            <ChatPanel roomId={roomId} roomName={room.name} />
+            <ChatPanel roomId={roomId} roomName={room.name} searchOpen={searchOpen} typingMembers={memberItems.filter(member=>presence.typing.includes(member.id))} onTyping={presence.onTyping}/>
           </div>
           {membersOpen && (
             <MembersPopover

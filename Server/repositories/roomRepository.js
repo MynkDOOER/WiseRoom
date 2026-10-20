@@ -31,7 +31,8 @@ export const findRoomsByMember = async (userId) => {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       ...roomFields,
-      members: { where: { userId }, select: { role: true } },
+      members: { where: { userId }, select: { role: true, pinned: true } },
+      messages: { where: { parentId: null }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 1, select: { body: true, createdAt: true, voiceMime: true, author: { select: { displayName: true, id: true } } } },
     },
   });
 };

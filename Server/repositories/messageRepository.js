@@ -1,6 +1,9 @@
 import prisma from "../config/db.js";
 
-const messageFields = {
+export const messageFields = {
+  parentId: true,
+  reactions: { select: { userId: true, emoji: true } },
+  _count: { select: { replies: true } },
   id: true,
   roomId: true,
   body: true,
@@ -10,14 +13,14 @@ const messageFields = {
   author: { select: { id: true, displayName: true } },
 };
 
-export const createMessage = async ({ roomId, authorId, body }, db = prisma) => {
-  return db.message.create({ data: { roomId, authorId, body }, select: messageFields });
+export const createMessage = async ({ roomId, authorId, body, parentId }, db = prisma) => {
+  return db.message.create({ data: { roomId, authorId, body, ...(parentId ? { parentId } : {}) }, select: messageFields });
 };
 
-export const findMessagePage = async (roomId, { before, limit }, db = prisma) => {
+export const findMessagePage = async (roomId, { before, limit, userId }, db = prisma) => {
   return db.message.findMany({
     where: {
-      roomId,
+      roomId, parentId: null,
       ...(before ? {
         OR: [
           { createdAt: { lt: before.createdAt } },
@@ -27,7 +30,7 @@ export const findMessagePage = async (roomId, { before, limit }, db = prisma) =>
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
-    select: messageFields,
+    select: { ...messageFields, ...(userId ? { savedBy: { where: { userId }, select: { userId: true } } } : {}) },
   });
 };
 

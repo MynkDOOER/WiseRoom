@@ -21,6 +21,8 @@ enum JoinRequestStatus {
 }
 
 model User {
+  savedMessages SavedMessage[]
+  reactions MessageReaction[]
   // Clerk supplies this ID after authentication.
   id          String   @id
   displayName String?
@@ -69,6 +71,8 @@ model RoomJoinRequest {
 }
 
 model RoomMember {
+  pinned Boolean @default(false)
+  lastReadAt DateTime @default(now())
   roomId   String
   userId   String
   role     RoomRole @default(MEMBER)
@@ -82,6 +86,12 @@ model RoomMember {
 }
 
 model Message {
+  @@index([parentId, createdAt, id])
+  parentId String?
+  parent Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Message[] @relation("MessageThread")
+  reactions MessageReaction[]
+  savedBy SavedMessage[]
   voiceKey String?
   voiceMime String?
   voiceDurationMs Int?
@@ -96,4 +106,24 @@ model Message {
 
   @@index([roomId, createdAt, id])
   @@index([authorId])
+}
+
+model MessageReaction {
+  messageId String
+  userId String
+  emoji String
+  createdAt DateTime @default(now())
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([messageId, userId, emoji])
+  @@index([userId])
+}
+model SavedMessage {
+  messageId String
+  userId String
+  createdAt DateTime @default(now())
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([messageId, userId])
+  @@index([userId, createdAt])
 }

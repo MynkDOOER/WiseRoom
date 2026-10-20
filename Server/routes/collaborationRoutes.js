@@ -1,0 +1,15 @@
+import express from "express";
+import protect from "../middlewares/authMiddleware.js";
+import * as controller from "../controllers/collaborationController.js";
+const router=express.Router({mergeParams:true});
+router.use(protect);
+router.get("/messages/changes",controller.changes);
+router.put("/messages/:messageId/reaction",controller.reactToMessage);
+router.put("/messages/:messageId/saved",controller.saveMessage);
+router.get("/messages/:messageId/thread",controller.thread);
+router.post("/messages/:messageId/thread",controller.reply);
+router.post("/read",controller.read);
+router.put("/pin",controller.pin);
+router.get("/presence",controller.presence);
+router.post("/presence",controller.presence);
+export default router;

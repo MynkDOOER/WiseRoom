@@ -38,11 +38,12 @@ export const getMessagesForMember = async (userId, roomId, options = {}) => {
 
   return withMembershipTransaction(async tx => {
     await requireRoomMembership(userId, roomId, tx);
-    const records = await findMessagePage(roomId, { before, limit }, tx);
+    const records = await findMessagePage(roomId, { before, limit, userId }, tx);
     const hasMore = records.length > limit;
     const page = records.slice(0, limit);
     const nextCursor = hasMore ? encodeMessageCursor(roomId, page[page.length - 1]) : null;
     return {
+      syncCursor: page.length ? encodeMessageCursor(roomId, page[0]) : encodeMessageCursor(roomId, { id: "00000000-0000-4000-8000-000000000000", createdAt: new Date() }),
       messages: page.reverse(),
       pagination: { hasMore, nextCursor },
     };

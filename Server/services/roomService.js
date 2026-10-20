@@ -23,13 +23,13 @@ async function ensureLocalUser(userId) {
   if (!(await findUserById(userId))) await syncClerkUser(userId);
 }
 
-function roomSummary(room, role, userId) {
+function roomSummary(room, role, userId, pinned = false) {
   return {
     id: room.id,
     name: room.name,
     createdById: room.createdById,
     createdAt: room.createdAt,
-    role,
+    role, pinned, latestMessage: room.messages?.[0] || null,
     memberCount: room._count.members,
     updatedAt: room.updatedAt,
     avatarUrl: room.avatarKey ? roomAvatarUrl(room.id, userId, room.avatarKey) : null,
@@ -67,12 +67,12 @@ export const createRoomForUser = async (userId, name) => {
 
 export const getRoomsForUser = async (userId) => {
   const rooms = await findRoomsByMember(userId);
-  return rooms.map(room => roomSummary(room, room.members[0].role, userId));
+  return rooms.map(room => roomSummary(room, room.members[0].role, userId, room.members[0].pinned));
 };
 
 export const getRoomForMember = async (userId, roomId) => {
   const { room, membership } = await requireRoomMembership(userId, roomId);
-  return roomSummary(room, membership.role, userId);
+  return roomSummary(room, membership.role, userId, membership.pinned);
 };
 
 export const joinRoomByInvite = async () => { throw new AppError(410, "Direct joining is no longer available. Open a room invitation and request access."); };

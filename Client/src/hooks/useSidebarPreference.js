@@ -5,11 +5,11 @@ function readPreference() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     return {
-      width: Number.isFinite(saved?.width) ? clamp(saved.width) : 240,
+      width: Number.isFinite(saved?.width) ? clamp(saved.width) : 260,
       collapsed: saved?.collapsed === true,
     };
   } catch {
-    return { width: 240, collapsed: false };
+    return { width: 260, collapsed: false };
   }
 }
 export default function useSidebarPreference() {
@@ -63,6 +63,6 @@ export default function useSidebarPreference() {
         ...current,
         collapsed: !current.collapsed,
       })),
-    resetWidth: () => setPreference((current) => ({ ...current, width: 240 })),
+    resetWidth: () => setPreference((current) => ({ ...current, width: 260 })),
   };
 }
