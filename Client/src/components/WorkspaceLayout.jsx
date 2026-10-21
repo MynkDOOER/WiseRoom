@@ -69,7 +69,7 @@ function Sidebar({
           <strong>{room.name}</strong>
           <span>
             {room.latestMessage
-              ? `${room.latestMessage.author.displayName?.split(" ")[0] || "Member"}: ${room.latestMessage.voiceMime ? "Voice message" : room.latestMessage.body.replace(/\n/g, " ").replace(/```[\s\S]*?```/g, "Code note")}`
+              ? `${room.latestMessage.author.displayName?.split(" ")[0] || "Member"}: ${room.latestMessage.deletedAt ? "This message was deleted" : room.latestMessage.voiceMime ? "Voice message" : room.latestMessage.body.replace(/\n/g, " ").replace(/```[\s\S]*?```/g, "Code note")}`
               : `${room.memberCount} ${room.memberCount === 1 ? "member" : "members"}`}
           </span>
         </div>

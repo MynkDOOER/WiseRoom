@@ -42,3 +42,11 @@ export const uploadRoomAvatar = (token, roomId, blob) =>
 
 export const resetRoomAvatar = (token, roomId) =>
   apiRequest(token, `${path(roomId)}/avatar`, { method: "DELETE" });
+
+export const deleteRoom = (token, roomId) =>
+  apiRequest(token, path(roomId), { method: "DELETE" });
+export const transferOwnership = (token, roomId, userId) =>
+  apiRequest(token, `${path(roomId)}/ownership`, {
+    method: "POST",
+    body: { userId },
+  });

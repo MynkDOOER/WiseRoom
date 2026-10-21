@@ -3,6 +3,7 @@ import Icon from "./Icon";
 
 const clamp = (value) => Math.max(0, Math.min(1, value));
 function snippet(message) {
+  if (message.deletedAt) return "This message was deleted";
   if (message.voiceMime) return "Voice message";
   return (
     message.body

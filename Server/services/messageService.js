@@ -1,4 +1,5 @@
 import prisma from "../config/db.js";
+import { deleteVoice } from "../config/localVoiceStore.js";
 import AppError from "../utils/AppError.js";
 import {
   decodeMessageCursor,
@@ -6,6 +7,7 @@ import {
 } from "../utils/messageCursor.js";
 import { requireRoomMembership } from "./roomService.js";
 import {
+  messageFields,
   createMessage,
   findMessagePage,
 } from "../repositories/messageRepository.js";
@@ -78,5 +80,65 @@ export const getMessagesForMember = async (userId, roomId, options = {}) => {
       messages: page.reverse(),
       pagination: { hasMore, nextCursor },
     };
+  });
+};
+
+// Keep the row as a tombstone so pagination, dates and thread links stay stable.
+export const deleteMessageForAuthor = (userId, roomId, messageId) => {
+  if (typeof messageId !== "string" || !/^[0-9a-f-]{36}$/i.test(messageId))
+    throw new AppError(400, "Invalid message ID.");
+  return withMembershipTransaction(async (tx) => {
+    await requireRoomMembership(userId, roomId, tx);
+    const message = await tx.message.findFirst({
+      where: { id: messageId, roomId },
+    });
+    if (!message) throw new AppError(404, "Message not found in this room.");
+    if (message.authorId !== userId)
+      throw new AppError(403, "You can only delete your own messages.");
+    const updated = await tx.message.update({
+      where: { id: messageId },
+      data: {
+        deletedAt: message.deletedAt || new Date(),
+        body: "",
+        voiceKey: null,
+        voiceMime: null,
+        voiceDurationMs: null,
+      },
+      select: messageFields,
+    });
+    await tx.messageReaction.deleteMany({ where: { messageId } });
+    await tx.savedMessage.deleteMany({ where: { messageId } });
+    return {
+      message: { ...updated, reactions: [], savedBy: [] },
+      voiceKey: message.voiceKey,
+    };
+  }).then(async ({ message, voiceKey }) => {
+    if (voiceKey) {
+      try {
+        await deleteVoice(voiceKey);
+      } catch {
+        console.error(
+          "Could not remove a deleted voice message from local storage.",
+        );
+      }
+    }
+    return message;
+  });
+};
+
+// Poll tombstones for loaded history too, including messages older than the latest page.
+export const getDeletedMessagesForMember = (userId, roomId, ids) => {
+  if (
+    !Array.isArray(ids) ||
+    ids.length > 100 ||
+    ids.some((id) => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))
+  )
+    throw new AppError(400, "Supply up to 100 message IDs.");
+  return withMembershipTransaction(async (tx) => {
+    await requireRoomMembership(userId, roomId, tx);
+    return tx.message.findMany({
+      where: { roomId, id: { in: ids }, deletedAt: { not: null } },
+      select: messageFields,
+    });
   });
 };

@@ -113,7 +113,7 @@ export default function RoomsDashboard() {
                 </span>
                 <span className="room-row-preview">
                   {room.latestMessage
-                    ? `${room.latestMessage.author.displayName?.split(" ")[0] || "Member"}: ${room.latestMessage.voiceMime ? "Voice message" : room.latestMessage.body.replace(/```[\s\S]*?```/g, "Code note").replace(/\n/g, " ")}`
+                    ? `${room.latestMessage.author.displayName?.split(" ")[0] || "Member"}: ${room.latestMessage.deletedAt ? "This message was deleted" : room.latestMessage.voiceMime ? "Voice message" : room.latestMessage.body.replace(/```[\s\S]*?```/g, "Code note").replace(/\n/g, " ")}`
                     : "Start the conversation"}
                 </span>
                 <time className="room-row-time">

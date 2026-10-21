@@ -61,13 +61,17 @@ function RoomDetails({ roomId }) {
     () =>
       new URLSearchParams(window.location.search).get("panel") === "requests",
   );
+  const [peopleTab, setPeopleTab] = useState("requests");
   const [searchOpen, setSearchOpen] = useState(false);
   const presence = useRoomPresence(roomId, Boolean(result?.room));
   const membersAnchor = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
+    let pending = false;
     async function load() {
+      if (pending) return;
+      pending = true;
       try {
         const token = await getToken();
         if (controller.signal.aborted) return;
@@ -75,13 +79,28 @@ function RoomDetails({ roomId }) {
           getRoom(token, roomId, controller.signal),
           getMembers(token, roomId, controller.signal),
         ]);
-        if (!controller.signal.aborted) setResult({ room, members });
+        if (!controller.signal.aborted) {
+          setResult({ room, members });
+          if (room.role !== "OWNER") {
+            setInviteToken("");
+            setCopied(false);
+            setPeopleOpen(false);
+          }
+        }
       } catch (error) {
         if (!controller.signal.aborted) setResult({ error: error.message });
+      } finally {
+        pending = false;
       }
     }
     load();
-    return () => controller.abort();
+    const timer = setInterval(() => {
+      if (!document.hidden) load();
+    }, 15000);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
   }, [getToken, roomId, attempt]);
 
   function openMembers(id = null) {
@@ -96,6 +115,11 @@ function RoomDetails({ roomId }) {
       getMembers(token, roomId),
     ]);
     setResult({ room, members });
+    if (room.role !== "OWNER") {
+      setInviteToken("");
+      setCopied(false);
+      setPeopleOpen(false);
+    }
     refreshRooms();
   }
   async function refreshMembers() {
@@ -337,10 +361,20 @@ function RoomDetails({ roomId }) {
               room={room}
               onClose={() => setSettingsOpen(false)}
               onChanged={refreshRoomDetails}
+              onDeleted={() => {
+                refreshRooms();
+                navigate("/workspace", { replace: true });
+              }}
+              onManage={() => {
+                setSettingsOpen(false);
+                setPeopleTab("members");
+                setPeopleOpen(true);
+              }}
             />
           )}
           {peopleOpen && room.role === "OWNER" && (
             <RoomPeopleDialog
+              initialTab={peopleTab}
               room={room}
               onClose={() => setPeopleOpen(false)}
               onChanged={refreshRoomDetails}

@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react";
 import MemberAvatar from "./MemberAvatar";
+import MemberTooltip from "./MemberTooltip";
 
 // Adapted from VengeanceUI's ElasticStack for React/JS and WiseRoom's real members.
 // https://www.vengenceui.com/components/elastic-stack
@@ -19,6 +20,7 @@ export default function ElasticStack({
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const root = useRef(null);
+  const activeAnchor = useRef(null);
   const tooltipId = useId();
   const visible = items.slice(0, Math.max(1, maxVisible));
   const remaining = items.length - visible.length;
@@ -39,6 +41,13 @@ export default function ElasticStack({
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget))
           setHoveredIndex(null);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && hoveredIndex !== null && showTooltips) {
+          event.preventDefault();
+          event.stopPropagation();
+          setHoveredIndex(null);
+        }
       }}
     >
       {entries.map((item, index) => {
@@ -72,10 +81,20 @@ export default function ElasticStack({
               active && showTooltips ? `${tooltipId}-${index}` : undefined
             }
             onPointerEnter={(event) => {
-              if (event.pointerType !== "touch") setHoveredIndex(index);
+              if (event.pointerType !== "touch") {
+                activeAnchor.current = event.currentTarget;
+                setHoveredIndex(index);
+              }
             }}
-            onFocus={() => setHoveredIndex(index)}
-            onClick={() => (item.remaining ? onMore?.() : onSelect?.(item.id))}
+            onFocus={(event) => {
+              activeAnchor.current = event.currentTarget;
+              setHoveredIndex(index);
+            }}
+            onClick={() => {
+              setHoveredIndex(null);
+              if (item.remaining) onMore?.();
+              else onSelect?.(item.id);
+            }}
             style={{
               width: itemSize,
               height: itemSize,
@@ -95,16 +114,15 @@ export default function ElasticStack({
               />
             )}
             {active && showTooltips && (
-              <span
-                className="elastic-tooltip"
-                role="tooltip"
+              <MemberTooltip
+                anchorRef={activeAnchor}
                 id={`${tooltipId}-${index}`}
               >
                 <strong>{tooltip}</strong>
                 {!item.remaining && (
                   <span>{item.role === "OWNER" ? "Room owner" : "Member"}</span>
                 )}
-              </span>
+              </MemberTooltip>
             )}
           </button>
         );

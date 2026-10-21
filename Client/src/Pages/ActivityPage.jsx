@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { getActivity, markAllRead, notifyActivity } from "../api/collaboration";
+import { mergeMessage } from "../utils/mergeMessages";
 import MessageItem from "../components/MessageItem";
 import Icon from "../components/Icon";
 const titles = {
@@ -58,7 +59,7 @@ export default function ActivityPage({ kind }) {
               ...current,
               messages: current.messages
                 .map((row) =>
-                  row.id === message.id ? { ...row, ...message } : row,
+                  row.id === message.id ? mergeMessage(row, message) : row,
                 )
                 .filter((row) => kind !== "saved" || row.savedBy?.length),
             }

@@ -2,6 +2,8 @@ import express from "express";
 import protect from "../middlewares/authMiddleware.js";
 import {
   renameRoom,
+  deleteRoom,
+  transferOwnership,
   removeMember,
   resetInvite,
   saveAvatar,
@@ -34,6 +36,8 @@ router.get("/:roomId/members", listMembers);
 router.delete("/:roomId/members/me", leaveRoom);
 router.get("/:roomId/invite", getRoomInvite);
 router.patch("/:roomId", renameRoom);
+router.delete("/:roomId", deleteRoom);
+router.post("/:roomId/ownership", transferOwnership);
 router.delete("/:roomId/members/:userId", removeMember);
 router.post("/:roomId/invite/reset", resetInvite);
 router.put(

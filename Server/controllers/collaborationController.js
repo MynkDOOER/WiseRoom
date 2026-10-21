@@ -1,4 +1,5 @@
 import * as service from "../services/collaborationService.js";
+
 const handle = (operation) => async (req, res, next) => {
   try {
     const data = await operation(req);
@@ -8,6 +9,7 @@ const handle = (operation) => async (req, res, next) => {
     next(error);
   }
 };
+
 export const reactToMessage = handle(async (req) => ({
   message: await service.changeReaction(
     req.userId,
@@ -16,6 +18,7 @@ export const reactToMessage = handle(async (req) => ({
     req.body,
   ),
 }));
+
 export const saveMessage = handle(async (req) => ({
   message: await service.changeSaved(
     req.userId,
@@ -24,6 +27,7 @@ export const saveMessage = handle(async (req) => ({
     req.body?.active,
   ),
 }));
+
 export const thread = handle((req) =>
   service.getThread(
     req.userId,
@@ -32,6 +36,7 @@ export const thread = handle((req) =>
     req.query.before,
   ),
 );
+
 export const reply = handle(async (req) => ({
   message: await service.replyToThread(
     req.userId,
@@ -40,9 +45,11 @@ export const reply = handle(async (req) => ({
     req.body?.body,
   ),
 }));
+
 export const changes = handle((req) =>
   service.getChanges(req.userId, req.params.roomId, req.query.after),
 );
+
 export const read = handle(async (req) => {
   await service.markRoomRead(
     req.userId,
@@ -50,6 +57,7 @@ export const read = handle(async (req) => {
     req.body?.messageId,
   );
 });
+
 export const presence = handle((req) =>
   service.presenceFor(
     req.userId,
@@ -57,10 +65,13 @@ export const presence = handle((req) =>
     req.method === "POST" ? req.body : undefined,
   ),
 );
+
 export const activity = handle((req) =>
   service.activityFor(req.userId, req.params.kind, req.query.before),
 );
+
 export const unread = handle((req) => service.unreadFor(req.userId));
+
 export const readAll = handle(async (req) => {
   await service.readAllFor(req.userId);
 });

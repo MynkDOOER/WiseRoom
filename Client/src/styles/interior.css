@@ -1,3 +1,26 @@
+/* Member hover cards live outside the header/chat clipping contexts. */
+.elastic-tooltip.member-tooltip-overlay {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  right: auto;
+  visibility: hidden;
+  box-sizing: border-box;
+  max-width: min(260px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 10px 12px;
+  box-shadow: 0 8px 28px #0005;
+  font-family: var(--ui-font);
+  line-height: 1.5;
+  pointer-events: none;
+}
+
 /* One WiseRoom language: the homepage's charcoal, ivory, orange and typography. */
 :root {
   --canvas: #0f0c11;
@@ -612,5 +635,66 @@
     transform: none !important;
     stroke-dashoffset: 0 !important;
     opacity: 1 !important;
+  }
+}
+
+/* Account-relative conversation alignment, shared by chat, threads and activity. */
+.workspace-shell .message-item.is-own {
+  flex-direction: row-reverse;
+}
+.workspace-shell .message-item .message-content {
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: min(78%, 700px);
+}
+.workspace-shell .message-item.is-own .message-meta,
+.workspace-shell .message-item.is-own .message-extras {
+  justify-content: flex-end;
+}
+.workspace-shell .message-item.is-own .message-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.workspace-shell .message-item .message-body {
+  max-width: 100%;
+  text-align: left;
+}
+.workspace-shell .message-item .voice-note-wrap,
+.workspace-shell .message-item .voice-note {
+  max-width: 100%;
+}
+.workspace-shell .message-item.is-own .grouped-row-time {
+  left: auto;
+  right: 3px;
+}
+.workspace-shell .message-item.is-own .message-actions {
+  right: 48px;
+}
+.message-deleted {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--muted);
+  font: italic 13px/1.6 var(--ui-font);
+}
+.message-action-menu .delete-message-action {
+  color: #ffad99;
+}
+.room-danger-zone {
+  border-top: 1px solid #ff5a1f38;
+  padding-top: 20px;
+}
+.room-danger-zone .button-row,
+.person-actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .workspace-shell .message-item .message-content {
+    max-width: calc(100% - 39px);
+  }
+  .people-list .person-actions {
+    margin-left: 0;
   }
 }

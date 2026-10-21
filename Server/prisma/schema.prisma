@@ -86,6 +86,7 @@ model RoomMember {
 }
 
 model Message {
+  deletedAt DateTime?
   @@index([parentId, createdAt, id])
   parentId String?
   parent Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: Cascade)

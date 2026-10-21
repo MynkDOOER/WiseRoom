@@ -305,7 +305,9 @@ The backend follows **route → controller → service → repository** boundari
 | Leave room | — | ✓ | — |
 | Request access through an invitation | Already a member | Already a member | ✓ |
 
-Owners retain their membership; ownership transfer is not currently implemented. Invitation actions require authentication, and existing members are directed into the room.
+Each room has exactly one owner. The current owner can transfer ownership to an existing member (becoming a regular member), or permanently delete the room. Owners must transfer ownership before leaving. Invitation actions require authentication, and existing members are directed into the room.
+
+Messages from the signed-in account appear on the right; other members’ messages appear on the left. Authors can delete their own messages for everyone: text/recordings are removed and replaced by “This message was deleted”, while message order and existing thread replies remain. Deleted messages cannot be saved or reacted to. Deletion updates use the existing polling flow.
 
 ## API overview
 

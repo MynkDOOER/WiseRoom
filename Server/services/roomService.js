@@ -1,4 +1,6 @@
 import prisma from "../config/db.js";
+import { deleteAvatar } from "../config/localAvatarStore.js";
+import { deleteVoice } from "../config/localVoiceStore.js";
 import { generateInviteCode } from "../utils/inviteCode.js";
 import { transaction } from "../utils/transaction.js";
 import { roomAvatarUrl } from "../utils/avatarAccess.js";
@@ -113,7 +115,7 @@ export const leaveRoomForUser = async (userId, roomId) => {
     if (membership.role === "OWNER")
       throw new AppError(
         409,
-        "Owners must keep their membership. Ownership transfer isn't available yet.",
+        "Transfer ownership to another member before leaving the room.",
       );
     await deleteMembership(roomId, userId, tx);
   });
@@ -126,7 +128,7 @@ export const getMembersForRoom = async (userId, roomId) => {
 
 export const requireRoomOwner = async (userId, roomId, db = prisma) => {
   const access = await requireRoomMembership(userId, roomId, db);
-  if (access.membership.role !== "OWNER" || access.room.createdById !== userId)
+  if (access.membership.role !== "OWNER")
     throw new AppError(403, "Only the room owner can do this.");
   return access;
 };
@@ -172,4 +174,63 @@ export const removeMemberForOwner = async (userId, roomId, targetId) => {
       throw new AppError(409, "The room owner cannot be removed.");
     await deleteMembership(roomId, targetId, tx);
   });
+};
+
+// createdById remains the historical creator; the membership role grants ownership.
+export const transferRoomOwnership = (userId, roomId, targetId) => {
+  if (typeof targetId !== "string" || !targetId || targetId.length > 200)
+    throw new AppError(400, "Choose a room member.");
+  if (targetId === userId)
+    throw new AppError(409, "You already own this room.");
+  return transaction(async (tx) => {
+    await requireRoomOwner(userId, roomId, tx);
+    const target = await findMembership(roomId, targetId, tx);
+    if (!target)
+      throw new AppError(404, "This person is no longer a room member.");
+    if (target.role !== "MEMBER")
+      throw new AppError(409, "Choose a regular room member.");
+    await tx.roomMember.update({
+      where: { roomId_userId: { roomId, userId } },
+      data: { role: "MEMBER" },
+    });
+    await tx.roomMember.update({
+      where: { roomId_userId: { roomId, userId: targetId } },
+      data: { role: "OWNER" },
+    });
+    await tx.room.update({
+      where: { id: roomId },
+      data: { updatedAt: new Date() },
+    });
+    return { ownerId: targetId };
+  });
+};
+
+export const deleteRoomForOwner = async (userId, roomId) => {
+  const assets = await transaction(async (tx) => {
+    const { room } = await requireRoomOwner(userId, roomId, tx);
+    const recordings = await tx.message.findMany({
+      where: { roomId, voiceKey: { not: null } },
+      select: { voiceKey: true },
+    });
+    // Foreign keys cascade membership, requests, messages, reactions and saves.
+    await tx.room.delete({ where: { id: roomId } });
+    return { avatarKey: room.avatarKey, recordings };
+  });
+  // Storage failures must not report a committed room deletion as a failure.
+  for (const recording of assets.recordings) {
+    try {
+      await deleteVoice(recording.voiceKey);
+    } catch {
+      console.error(
+        "Could not remove a deleted room recording from local storage.",
+      );
+    }
+  }
+  try {
+    await deleteAvatar(assets.avatarKey);
+  } catch {
+    console.error(
+      "Could not remove a deleted room picture from local storage.",
+    );
+  }
 };

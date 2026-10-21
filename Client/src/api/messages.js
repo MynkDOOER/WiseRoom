@@ -1,3 +1,5 @@
+import { apiRequest } from "./http";
+
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
@@ -113,4 +115,32 @@ export async function loadVoiceMessage(token, roomId, messageId, signal) {
     );
   }
   return response.blob();
+}
+
+export const deleteMessage = async (token, roomId, messageId) =>
+  (
+    await apiRequest(
+      token,
+      `/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(messageId)}`,
+      { method: "DELETE" },
+    )
+  ).message;
+export async function syncDeletedMessages(token, roomId, messages, signal) {
+  const ids = messages
+    .filter((message) => !message.deletedAt)
+    .map((message) => message.id);
+  const deleted = [];
+  for (let offset = 0; offset < ids.length; offset += 100) {
+    const page = await apiRequest(
+      token,
+      `/rooms/${encodeURIComponent(roomId)}/messages/deleted`,
+      {
+        method: "POST",
+        body: { ids: ids.slice(offset, offset + 100) },
+        signal,
+      },
+    );
+    deleted.push(...page.messages);
+  }
+  return deleted;
 }

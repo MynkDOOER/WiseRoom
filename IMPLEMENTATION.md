@@ -86,7 +86,16 @@ Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. 
 
 - The room-management verification run used one real signed-in account. Live two-account request/approval/decline/removal was not exercised; authorization/state changes are covered by isolated HTTP tests with mocked authentication/database. Do not describe those tests as live multi-user verification.
 - Invitation copy uses the browser clipboard API with a visible selectable-link fallback. A previous browser automation clipboard attempt timed out; clipboard completion is not claimed here.
-- Hosted storage/deployment, email notifications, document/RAG processing, and ownership transfer remain unimplemented. Current live updates use polling.
+- Hosted storage/deployment, email notifications, and document/RAG processing remain unimplemented. Current live updates use polling.
+
+## Ownership and message lifecycle — 2026-10-21
+
+- Account-relative alignment: own messages on the right, other members on the left across room conversations, threads and activity.
+- Current owners can permanently delete rooms from Room settings after confirming the room name. Database relations cascade; local voice and avatar assets are cleaned up after commit.
+- Owners can transfer ownership to an existing member through Manage people. Serializable transactions demote the previous owner and promote the next; a partial unique index prevents multiple OWNER memberships. The historical `createdById` stays unchanged and does not grant owner permissions.
+- Message authors can delete their own text, code or voice messages. `deletedAt` records a tombstone; original content, reactions and saves are removed, existing replies remain. Voice downloads no longer resolve after deletion.
+- Loaded history synchronizes deletion states through authenticated, room-scoped polling, including messages outside the latest page. Deleted state wins over stale polling responses.
+- Migration: `20261021000000_room_ownership_message_deletion`.
 - Cached chat does not automatically disappear from another browser when a member is removed. The server denies subsequent reads/writes; active clients recheck access through polling or manual refresh.
 - Full screen-reader/a11y certification and long-list multi-user UX testing remain separate from the checks above.
 

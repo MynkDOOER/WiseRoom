@@ -45,6 +45,7 @@ export const findRoomsByMember = async (userId) => {
         take: 1,
         select: {
           body: true,
+          deletedAt: true,
           createdAt: true,
           voiceMime: true,
           author: { select: { displayName: true, id: true } },

@@ -9,8 +9,14 @@ import {
 } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getMessages, sendMessage, sendVoiceMessage } from "../api/messages";
+import {
+  syncDeletedMessages,
+  getMessages,
+  sendMessage,
+  sendVoiceMessage,
+} from "../api/messages";
 import Icon from "./Icon";
+import { mergeMessage, mergeMessages } from "../utils/mergeMessages";
 import { messageWindow } from "../utils/messageWindow";
 import MessageItem from "./MessageItem";
 import MessageRail from "./MessageRail";
@@ -72,7 +78,7 @@ export default function ChatPanel({
     (updated) =>
       setMessages((current) =>
         current.map((message) =>
-          message.id === updated.id ? updated : message,
+          message.id === updated.id ? mergeMessage(message, updated) : message,
         ),
       ),
     [],
@@ -160,6 +166,14 @@ export default function ChatPanel({
             if (!next.hasMore) break;
           }
         } else sync.current = page.syncCursor;
+        const tombstones = await syncDeletedMessages(
+          token,
+          roomId,
+          current,
+          controller.signal,
+        );
+        if (controller.signal.aborted) return;
+        additions.push(...tombstones);
         const element = scrollRef.current;
         const atBottom =
           element &&
@@ -168,18 +182,8 @@ export default function ChatPanel({
         if (atBottom) setNewCount(0);
         if (fresh.length && atBottom) scrollChange.current = { mode: "bottom" };
         else if (fresh.length) setNewCount((value) => value + fresh.length);
-        setMessages((previous) =>
-          [
-            ...new Map(
-              [...previous, ...additions].map((row) => [row.id, row]),
-            ).values(),
-          ].sort(
-            (a, b) =>
-              new Date(a.createdAt) - new Date(b.createdAt) ||
-              a.id.localeCompare(b.id),
-          ),
-        );
-        const latest = additions.at(-1);
+        setMessages((previous) => mergeMessages(previous, additions));
+        const latest = fresh.at(-1);
         if (latest && atBottom && lastRead.current !== latest.id) {
           lastRead.current = latest.id;
           await markRoomRead(token, roomId, latest.id);

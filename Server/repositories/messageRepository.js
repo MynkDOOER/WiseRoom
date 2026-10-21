@@ -1,6 +1,7 @@
 import prisma from "../config/db.js";
 
 export const messageFields = {
+  deletedAt: true,
   parentId: true,
   reactions: { select: { userId: true, emoji: true } },
   _count: { select: { replies: true } },

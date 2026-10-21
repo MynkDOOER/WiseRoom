@@ -39,7 +39,8 @@ export const changeReaction = (userId, roomId, messageId, body) => {
       "Choose a supported reaction and its active state.",
     );
   return inRoom(userId, roomId, async (tx) => {
-    await requireMessage(roomId, messageId, userId, tx);
+    const message = await requireMessage(roomId, messageId, userId, tx);
+    if (message.deletedAt) throw new AppError(409, "This message was deleted.");
     await repository.setReaction(
       messageId,
       userId,
@@ -54,7 +55,9 @@ export const changeSaved = (userId, roomId, messageId, active) => {
   if (typeof active !== "boolean")
     throw new AppError(400, "Specify whether to save this message.");
   return inRoom(userId, roomId, async (tx) => {
-    await requireMessage(roomId, messageId, userId, tx);
+    const message = await requireMessage(roomId, messageId, userId, tx);
+    if (message.deletedAt && active)
+      throw new AppError(409, "This message was deleted.");
     await repository.setSaved(messageId, userId, active, tx);
     return repository.findScopedMessage(roomId, messageId, userId, tx);
   });
@@ -89,6 +92,11 @@ export const replyToThread = (userId, roomId, messageId, body) => {
     throw new AppError(400, "Replies must contain 1 to 4,000 characters.");
   return inRoom(userId, roomId, async (tx) => {
     const parent = await requireMessage(roomId, messageId, userId, tx);
+    if (parent.deletedAt)
+      throw new AppError(
+        409,
+        "This message was deleted. Existing replies are still available.",
+      );
     if (parent.parentId)
       throw new AppError(400, "Reply to the original message in this thread.");
     const reply = await repository.insertReply(

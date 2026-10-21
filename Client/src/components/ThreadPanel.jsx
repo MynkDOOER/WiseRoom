@@ -7,6 +7,8 @@ import {
   notifyActivity,
 } from "../api/collaboration";
 import Modal from "./Modal";
+import { syncDeletedMessages } from "../api/messages";
+import { mergeMessage, mergeMessages } from "../utils/mergeMessages";
 import MessageItem from "./MessageItem";
 import Icon from "./Icon";
 export default function ThreadPanel({
@@ -24,7 +26,11 @@ export default function ThreadPanel({
     [older, setOlder] = useState(false);
   const scroll = useRef(null),
     pending = useRef(false),
-    controller = useRef(null);
+    controller = useRef(null),
+    dataRef = useRef(null);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
   useEffect(() => {
     const abort = new AbortController();
     controller.current = abort;
@@ -42,22 +48,22 @@ export default function ThreadPanel({
           abort.signal,
         );
         if (abort.signal.aborted) return;
+        const tombstones = await syncDeletedMessages(
+          token,
+          roomId,
+          dataRef.current?.replies || [],
+          abort.signal,
+        );
+        if (abort.signal.aborted) return;
         setData((current) =>
           current
             ? {
                 ...page,
-                replies: [
-                  ...new Map(
-                    [...current.replies, ...page.replies].map((row) => [
-                      row.id,
-                      row,
-                    ]),
-                  ).values(),
-                ].sort(
-                  (a, b) =>
-                    new Date(a.createdAt) - new Date(b.createdAt) ||
-                    a.id.localeCompare(b.id),
-                ),
+                parent: mergeMessage(current.parent, page.parent),
+                replies: mergeMessages(current.replies, [
+                  ...page.replies,
+                  ...tombstones,
+                ]),
                 pagination:
                   !current.pagination.hasMore &&
                   page.pagination.hasMore &&
@@ -171,10 +177,10 @@ export default function ThreadPanel({
         ? {
             ...current,
             ...(message.id === current.parent.id
-              ? { parent: message }
+              ? { parent: mergeMessage(current.parent, message) }
               : {
                   replies: current.replies.map((row) =>
-                    row.id === message.id ? message : row,
+                    row.id === message.id ? mergeMessage(row, message) : row,
                   ),
                 }),
           }
@@ -222,7 +228,7 @@ export default function ThreadPanel({
           </p>
         )}
       </div>
-      {data && (
+      {data && !data.parent.deletedAt && (
         <form className="thread-composer" onSubmit={send}>
           <label className="sr-only" htmlFor="thread-reply">
             Reply in thread

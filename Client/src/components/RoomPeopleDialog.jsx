@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { getMembers, removeMember } from "../api/rooms";
+import { getMembers, removeMember, transferOwnership } from "../api/rooms";
 import { getJoinRequests, decideJoinRequest } from "../api/joinRequests";
 import Modal from "./Modal";
 import Button from "./ui/Button";
 import Icon from "./Icon";
 
-export default function RoomPeopleDialog({ room, onClose, onChanged }) {
+export default function RoomPeopleDialog({
+  room,
+  onClose,
+  onChanged,
+  initialTab = "requests",
+}) {
   const { getToken, userId } = useAuth();
-  const [tab, setTab] = useState("requests");
+  const [tab, setTab] = useState(initialTab);
   const [members, setMembers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [cursor, setCursor] = useState(null);
@@ -18,6 +23,7 @@ export default function RoomPeopleDialog({ room, onClose, onChanged }) {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [target, setTarget] = useState(null);
+  const [transferTarget, setTransferTarget] = useState(null);
   useEffect(() => {
     let active = true;
     async function load() {
@@ -61,6 +67,10 @@ export default function RoomPeopleDialog({ room, onClose, onChanged }) {
           ),
         ]);
         setCursor(page.nextCursor);
+      } else if (kind === "transfer") {
+        await transferOwnership(token, room.id, transferTarget.userId);
+        await onChanged();
+        onClose();
       } else if (kind === "remove") {
         await removeMember(token, room.id, target.userId);
         setMembers((current) =>
@@ -189,13 +199,27 @@ export default function RoomPeopleDialog({ room, onClose, onChanged }) {
                   <span>{member.role === "OWNER" ? "Owner" : "Member"}</span>
                 </div>
                 {member.role !== "OWNER" && member.userId !== userId && (
-                  <Button
-                    variant="danger-outline"
-                    onClick={() => setTarget(member)}
-                    disabled={Boolean(busy)}
-                  >
-                    Remove
-                  </Button>
+                  <div className="person-actions">
+                    <Button
+                      disabled={Boolean(busy)}
+                      onClick={() => {
+                        setError("");
+                        setTransferTarget(member);
+                      }}
+                    >
+                      Make owner
+                    </Button>
+                    <Button
+                      variant="danger-outline"
+                      onClick={() => {
+                        setError("");
+                        setTarget(member);
+                      }}
+                      disabled={Boolean(busy)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 )}
               </li>
             ))}
@@ -212,9 +236,44 @@ export default function RoomPeopleDialog({ room, onClose, onChanged }) {
           </p>
         )}
         <p className="field-hint">
-          Only the owner can approve requests or remove members.
+          Only the current owner can approve requests, remove members or
+          transfer ownership.
         </p>
       </Modal>
+      {transferTarget && (
+        <Modal
+          title="Transfer room ownership?"
+          busy={Boolean(busy)}
+          onClose={() => setTransferTarget(null)}
+        >
+          <p className="muted">
+            <strong>{transferTarget.user.displayName || "This member"}</strong>{" "}
+            will become the room’s only owner. You’ll become a regular member
+            and lose access to invitations, member management, renaming and room
+            deletion.
+          </p>
+          {error && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
+          )}
+          <div className="dialog-footer">
+            <Button
+              disabled={Boolean(busy)}
+              onClick={() => setTransferTarget(null)}
+            >
+              Keep ownership
+            </Button>
+            <Button
+              variant="primary"
+              disabled={Boolean(busy)}
+              onClick={() => action("transfer")}
+            >
+              {busy === "transfer" ? "Transferring…" : "Transfer ownership"}
+            </Button>
+          </div>
+        </Modal>
+      )}
       {target && (
         <Modal
           title="Remove this member?"

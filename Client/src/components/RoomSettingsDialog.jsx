@@ -6,6 +6,7 @@ import {
   resetInvite,
   renameRoom,
   resetRoomAvatar,
+  deleteRoom,
 } from "../api/rooms";
 import Modal from "./Modal";
 import Button from "./ui/Button";
@@ -14,7 +15,13 @@ import RoomAvatar from "./ui/RoomAvatar";
 import RoomAvatarCropDialog from "./RoomAvatarCropDialog";
 import Icon from "./Icon";
 
-export default function RoomSettingsDialog({ room, onClose, onChanged }) {
+export default function RoomSettingsDialog({
+  room,
+  onClose,
+  onChanged,
+  onDeleted,
+  onManage,
+}) {
   const { getToken } = useAuth();
   const owner = room.role === "OWNER";
   const [name, setName] = useState(room.name);
@@ -24,6 +31,7 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
   const [feedback, setFeedback] = useState("");
   const [crop, setCrop] = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [deleteName, setDeleteName] = useState("");
   useEffect(() => {
     if (!owner) return;
     let active = true;
@@ -47,6 +55,13 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
     setFeedback("");
     try {
       const token = await getToken();
+      if (kind === "delete-room") {
+        if (deleteName !== room.name)
+          throw new Error("Enter the room name exactly to confirm.");
+        await deleteRoom(token, room.id);
+        onDeleted();
+        return;
+      }
       if (kind === "rename") {
         await renameRoom(token, room.id, name.trim());
         await onChanged();
@@ -198,6 +213,31 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
             )}
           </section>
         )}
+        {owner && (
+          <section className="settings-section room-danger-zone">
+            <h3>Ownership & room deletion</h3>
+            <p className="field-hint">
+              A room has one owner. Transfer ownership to an existing member, or
+              permanently delete the room for everyone.
+            </p>
+            <div className="button-row">
+              <Button onClick={onManage} disabled={Boolean(busy)}>
+                Transfer ownership
+              </Button>
+              <Button
+                variant="danger-outline"
+                disabled={Boolean(busy)}
+                onClick={() => {
+                  setDeleteName("");
+                  setError("");
+                  setConfirm("delete-room");
+                }}
+              >
+                Delete room
+              </Button>
+            </div>
+          </section>
+        )}
         {feedback && (
           <p className="action-feedback" role="status">
             {feedback}
@@ -219,18 +259,31 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
       {confirm && (
         <Modal
           title={
-            confirm === "reset-invite"
-              ? "Reset invitation?"
-              : "Remove room picture?"
+            confirm === "delete-room"
+              ? "Delete this room permanently?"
+              : confirm === "reset-invite"
+                ? "Reset invitation?"
+                : "Remove room picture?"
           }
           onClose={() => setConfirm(null)}
           busy={Boolean(busy)}
         >
           <p className="muted">
-            {confirm === "reset-invite"
-              ? "The existing link and code will stop accepting requests. Current members and pending requests stay unchanged."
-              : "The room will use its initials. Any member can upload a new picture."}
+            {confirm === "delete-room"
+              ? "All messages, recordings, members and invitations in this room will be permanently removed. This cannot be undone."
+              : confirm === "reset-invite"
+                ? "The existing link and code will stop accepting requests. Current members and pending requests stay unchanged."
+                : "The room will use its initials. Any member can upload a new picture."}
           </p>
+          {confirm === "delete-room" && (
+            <TextField
+              label={`Type “${room.name}” to confirm`}
+              value={deleteName}
+              autoComplete="off"
+              disabled={Boolean(busy)}
+              onChange={(event) => setDeleteName(event.target.value)}
+            />
+          )}
           {error && (
             <p role="alert" className="form-error">
               {error}
@@ -242,10 +295,17 @@ export default function RoomSettingsDialog({ room, onClose, onChanged }) {
             </Button>
             <Button
               variant="danger-outline"
-              disabled={Boolean(busy)}
+              disabled={
+                Boolean(busy) ||
+                (confirm === "delete-room" && deleteName !== room.name)
+              }
               onClick={() => action(confirm)}
             >
-              {busy ? "Updating…" : "Confirm"}
+              {busy
+                ? "Updating…"
+                : confirm === "delete-room"
+                  ? "Delete room permanently"
+                  : "Confirm"}
             </Button>
           </div>
         </Modal>

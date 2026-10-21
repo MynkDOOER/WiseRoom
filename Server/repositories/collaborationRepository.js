@@ -93,6 +93,7 @@ export const membershipsFor = (userId, db = prisma) =>
     },
   });
 export const unreadWhere = (userId, memberships) => ({
+  deletedAt: null,
   authorId: { not: userId },
   OR: memberships.map((member) => ({
     roomId: member.roomId,

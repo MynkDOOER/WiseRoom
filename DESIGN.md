@@ -35,7 +35,7 @@ Reuse `Client/src/components/WiseRoomLogo.jsx`. Its original SVG paths, colors, 
 - **Public `/`:** pill navigation, editorial hero, outlined word/orange emphasis, subtle grid/glow, illustrative room preview, pipeline, feature grid, real account entry, and outlined footer wordmark.
 - **Workspace `/workspace`:** personal greeting, real unread/request state, creation/invitation actions, compact room directory, and activity column.
 - **Navigation:** remembered desktop sidebar sizing (200–320px), collapse, mobile drawer, and actual-room switching.
-- **Chat:** framed dark surface, left-aligned chronological groups, small pastel avatars, inline author/time rows, code cards, voice controls, reactions, and threads.
+- **Chat:** framed dark surface, chronological groups with the signed-in user’s messages on the right and others on the left, small pastel avatars, inline author/time rows, code cards, voice controls, reactions, and threads. Deleted messages retain a muted placeholder.
 - **History:** slim timeline ruler with previews, pointer/keyboard navigation, current progress, and saved markers derived from loaded messages. Preserve pagination, reader position, and latest-message anchoring.
 - **Composer:** compact single-row expression/code/voice controls, expandable input, and Send. Enter sends; Shift+Enter inserts a newline. Recording preview/errors appear only when relevant.
 - **Room context:** actual desktop member/details panel; narrow layouts retain member/settings access in the header. Invite stays owner-only and visible on mobile.
