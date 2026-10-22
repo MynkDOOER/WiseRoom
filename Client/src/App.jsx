@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+const RealtimeProvider = lazy(() => import("./realtime/RealtimeProvider"));
 import { Navigate, Route, Routes } from "react-router-dom";
 import LandingPage from "./Pages/LandingPage";
 import SignInPage from "./Pages/SignInPage";
@@ -15,9 +17,19 @@ import JoinRoomPage from "./Pages/JoinRoomPage";
 function Workspace() {
   const { userId } = useAuth();
   return (
-    <WorkspaceProvider key={userId}>
-      <WorkspaceLayout />
-    </WorkspaceProvider>
+    <Suspense
+      fallback={
+        <p className="room-load-state" role="status">
+          Opening your workspace…
+        </p>
+      }
+    >
+      <RealtimeProvider key={userId}>
+        <WorkspaceProvider>
+          <WorkspaceLayout />
+        </WorkspaceProvider>
+      </RealtimeProvider>
+    </Suspense>
   );
 }
 

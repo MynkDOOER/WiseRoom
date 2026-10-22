@@ -5,6 +5,7 @@ import {
   sendMessage,
   deleteMessage,
   deletedMessages,
+  syncMessages,
 } from "../controllers/messageController.js";
 
 import { sendVoice, getVoice } from "../controllers/voiceController.js";
@@ -21,6 +22,7 @@ router.post(
 router.get("/:messageId/voice", getVoice);
 router.post("/", sendMessage);
 router.post("/deleted", deletedMessages);
+router.post("/sync", syncMessages);
 router.delete("/:messageId", deleteMessage);
 
 export default router;

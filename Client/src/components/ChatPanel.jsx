@@ -1,3 +1,4 @@
+import { useRealtime } from "../realtime/context";
 import {
   useCallback,
   useId,
@@ -10,7 +11,7 @@ import {
 import { useAuth } from "@clerk/clerk-react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  syncDeletedMessages,
+  syncLoadedMessages,
   getMessages,
   sendMessage,
   sendVoiceMessage,
@@ -51,6 +52,7 @@ export default function ChatPanel({
       return next;
     });
   const { getToken } = useAuth();
+  const { subscribe } = useRealtime();
   const [messages, setMessages] = useState([]);
   const [pagination, setPagination] = useState({
     hasMore: false,
@@ -127,15 +129,23 @@ export default function ChatPanel({
   useEffect(() => {
     if (loading.status !== "ready") return;
     const controller = new AbortController();
-    let pending = false;
+    let pending = false,
+      queued = false,
+      timer;
+    function requestSync() {
+      clearTimeout(timer);
+      timer = setTimeout(poll, 120);
+    }
     async function poll() {
-      if (
-        pending ||
-        document.hidden ||
-        operations.current.sending ||
-        operations.current.older
-      )
+      if (controller.signal.aborted || document.hidden) return;
+      if (pending) {
+        queued = true;
         return;
+      }
+      if (operations.current.sending || operations.current.older) {
+        requestSync();
+        return;
+      }
       pending = true;
       try {
         const token = await getToken();
@@ -164,9 +174,10 @@ export default function ChatPanel({
             additions.push(...next.messages);
             sync.current = next.syncCursor;
             if (!next.hasMore) break;
+            if (count === 4) queued = true;
           }
         } else sync.current = page.syncCursor;
-        const tombstones = await syncDeletedMessages(
+        const tombstones = await syncLoadedMessages(
           token,
           roomId,
           current,
@@ -196,19 +207,41 @@ export default function ChatPanel({
         }
       } finally {
         pending = false;
+        if (queued && !controller.signal.aborted) {
+          queued = false;
+          requestSync();
+        }
       }
     }
-    const timer = setInterval(poll, 6000);
-    const focus = () => {
-      if (!document.hidden) poll();
-    };
-    document.addEventListener("visibilitychange", focus);
+    const stop = subscribe((event) => {
+      if (event.roomId && event.roomId !== roomId) return;
+      if (["room:removed", "room:deleted"].includes(event.type)) {
+        controller.abort();
+        setMessages([]);
+        setLoading({
+          status: "denied",
+          message: "This room is no longer available to you.",
+        });
+      } else if (
+        [
+          "sync",
+          "message:created",
+          "message:updated",
+          "message:deleted",
+          "thread:changed",
+          "saved:changed",
+        ].includes(event.type)
+      )
+        requestSync();
+    });
+    // Covers a socket event arriving while the initial HTTP history was still loading.
+    requestSync();
     return () => {
       controller.abort();
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", focus);
+      clearTimeout(timer);
+      stop();
     };
-  }, [getToken, roomId, loading.status]);
+  }, [getToken, roomId, loading.status, subscribe]);
 
   function jumpToLatest() {
     stickToLatest.current = true;

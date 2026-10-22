@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import useLiveRefresh from "../realtime/useLiveRefresh";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { getUnread } from "../api/collaboration";
 import { syncUser } from "../api/users";
@@ -11,7 +12,21 @@ export default function WorkspaceProvider({ children }) {
   const [unread, setUnread] = useState({ total: 0, rooms: [] });
   const [activityAttempt, setActivityAttempt] = useState(0);
   const [roomDialog, setRoomDialog] = useState(null);
+  const accountCache = useRef(null);
   const refreshRooms = useCallback(() => setAttempt((value) => value + 1), []);
+  useLiveRefresh(
+    () => {
+      setActivityAttempt((value) => value + 1);
+    },
+    {
+      types:
+        "message:created message:updated message:deleted thread:changed saved:changed read:changed rooms:changed room:changed members:changed ownership:changed room:removed room:deleted requests:changed",
+    },
+  );
+  useLiveRefresh(refreshRooms, {
+    types:
+      "message:created message:deleted thread:changed rooms:changed room:changed members:changed ownership:changed room:removed room:deleted requests:changed",
+  });
   useEffect(() => {
     const controller = new AbortController();
     async function prepare() {
@@ -20,7 +35,12 @@ export default function WorkspaceProvider({ children }) {
         if (controller.signal.aborted) return;
         if (!token)
           throw new Error("Your session expired. Please sign in again.");
-        const account = await syncUser(token, controller.signal);
+        let account = accountCache.current;
+        if (!account) {
+          account = await syncUser(token, controller.signal);
+          if (controller.signal.aborted) return;
+          accountCache.current = account;
+        }
         const rooms = await listRooms(token, controller.signal);
         if (!controller.signal.aborted) setResult({ userId, account, rooms });
       } catch (error) {
@@ -56,14 +76,10 @@ export default function WorkspaceProvider({ children }) {
       }
     }
     load();
-    const timer = setInterval(() => {
-      if (!document.hidden) load();
-    }, 15000);
     const refresh = () => setActivityAttempt((value) => value + 1);
     window.addEventListener("wiseroom:activity", refresh);
     return () => {
       controller.abort();
-      clearInterval(timer);
       window.removeEventListener("wiseroom:activity", refresh);
     };
   }, [getToken, activityAttempt]);
@@ -76,6 +92,7 @@ export default function WorkspaceProvider({ children }) {
         loading: !current,
         error: current?.error,
         refreshRooms,
+        activityVersion: activityAttempt,
         unreadTotal: unread.total,
         unreadByRoom: Object.fromEntries(
           unread.rooms.map((row) => [row.roomId, row.count]),

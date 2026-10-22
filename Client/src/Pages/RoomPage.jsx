@@ -1,3 +1,4 @@
+import useLiveRefresh from "../realtime/useLiveRefresh";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
@@ -65,6 +66,34 @@ function RoomDetails({ roomId }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const presence = useRoomPresence(roomId, Boolean(result?.room));
   const membersAnchor = useRef(null);
+  const accessGeneration = useRef(0);
+  useLiveRefresh(
+    (event) => {
+      if (["room:removed", "room:deleted"].includes(event.type)) {
+        accessGeneration.current++;
+        setResult({
+          error:
+            event.type === "room:deleted"
+              ? "This room was deleted by its owner."
+              : "You no longer have access to this room.",
+        });
+        setInviteToken("");
+        setMembersOpen(false);
+        setSettingsOpen(false);
+        setPeopleOpen(false);
+        refreshRooms();
+      } else {
+        if (["invitation:changed", "ownership:changed"].includes(event.type))
+          setInviteToken("");
+        setAttempt((value) => value + 1);
+      }
+    },
+    {
+      roomId,
+      types:
+        "room:changed members:changed ownership:changed room:removed room:deleted requests:changed invitation:changed",
+    },
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,6 +101,7 @@ function RoomDetails({ roomId }) {
     async function load() {
       if (pending) return;
       pending = true;
+      const generation = accessGeneration.current;
       try {
         const token = await getToken();
         if (controller.signal.aborted) return;
@@ -79,7 +109,10 @@ function RoomDetails({ roomId }) {
           getRoom(token, roomId, controller.signal),
           getMembers(token, roomId, controller.signal),
         ]);
-        if (!controller.signal.aborted) {
+        if (
+          !controller.signal.aborted &&
+          generation === accessGeneration.current
+        ) {
           setResult({ room, members });
           if (room.role !== "OWNER") {
             setInviteToken("");
@@ -88,18 +121,18 @@ function RoomDetails({ roomId }) {
           }
         }
       } catch (error) {
-        if (!controller.signal.aborted) setResult({ error: error.message });
+        if (
+          !controller.signal.aborted &&
+          generation === accessGeneration.current
+        )
+          setResult({ error: error.message });
       } finally {
         pending = false;
       }
     }
     load();
-    const timer = setInterval(() => {
-      if (!document.hidden) load();
-    }, 15000);
     return () => {
       controller.abort();
-      clearInterval(timer);
     };
   }, [getToken, roomId, attempt]);
 
@@ -109,11 +142,13 @@ function RoomDetails({ roomId }) {
     setMembersOpen(true);
   }
   async function refreshRoomDetails() {
+    const generation = accessGeneration.current;
     const token = await getToken();
     const [room, members] = await Promise.all([
       getRoom(token, roomId),
       getMembers(token, roomId),
     ]);
+    if (generation !== accessGeneration.current) return;
     setResult({ room, members });
     if (room.role !== "OWNER") {
       setInviteToken("");

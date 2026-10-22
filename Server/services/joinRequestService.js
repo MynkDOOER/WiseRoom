@@ -1,3 +1,5 @@
+import prisma from "../config/db.js";
+import { publishUsers, publishRoom } from "../realtime/events.js";
 import AppError from "../utils/AppError.js";
 import { transaction } from "../utils/transaction.js";
 import { normalizeInviteCode } from "../utils/inviteCode.js";
@@ -43,8 +45,10 @@ export const previewInvitation = (userId, code) =>
 export const submitJoinRequest = async (userId, code) => {
   const normalized = normalizeInviteCode(code);
   if (!(await findUserById(userId))) await syncClerkUser(userId);
+  let notificationRoomId;
   return transaction(async (tx) => {
     const room = await resolveRoom(normalized, tx);
+    notificationRoomId = room.id;
     if (await findMembership(room.id, userId, tx))
       return { memberRoomId: room.id, request: null };
     const previous = await findRequest(room.id, userId, tx);
@@ -59,25 +63,34 @@ export const submitJoinRequest = async (userId, code) => {
       memberRoomId: null,
       request: requestSummary(await queueRequest(room.id, userId, tx)),
     };
+  }).then(async (result) => {
+    await notifyRequest(notificationRoomId, userId);
+    return result;
   });
 };
-export const cancelJoinRequest = (userId, code) =>
-  transaction(async (tx) => {
+export const cancelJoinRequest = (userId, code) => {
+  let notificationRoomId;
+  return transaction(async (tx) => {
     const room = await resolveRoom(code, tx);
+    notificationRoomId = room.id;
     const request = await findRequest(room.id, userId, tx);
     if (request?.status === "PENDING")
       await updateRequest(request.id, { status: "CANCELLED" }, tx);
-  });
-export const cancelOwnRequest = (userId, requestId) =>
-  transaction(async (tx) => {
+  }).then(() => notifyRequest(notificationRoomId, userId));
+};
+export const cancelOwnRequest = (userId, requestId) => {
+  let notificationRoomId;
+  return transaction(async (tx) => {
     if (typeof requestId !== "string" || !/^[0-9a-f-]{36}$/i.test(requestId))
       throw new AppError(400, "Invalid join request.");
     const request = await findRequestById(requestId, tx);
     if (!request || request.userId !== userId)
       throw new AppError(404, "Join request not found.");
+    notificationRoomId = request.roomId;
     if (request.status === "PENDING")
       await updateRequest(request.id, { status: "CANCELLED" }, tx);
-  });
+  }).then(() => notifyRequest(notificationRoomId, userId));
+};
 export const getJoinRequests = async (userId, roomId, cursor) =>
   transaction(async (tx) => {
     await requireRoomOwner(userId, roomId, tx);
@@ -102,11 +115,13 @@ export const decideJoinRequest = (userId, roomId, requestId, decision) => {
     throw new AppError(400, "Choose approve or decline.");
   if (typeof requestId !== "string" || !/^[0-9a-f-]{36}$/i.test(requestId))
     throw new AppError(400, "Invalid join request.");
+  let applicantId;
   return transaction(async (tx) => {
     await requireRoomOwner(userId, roomId, tx);
     const request = await findRequestById(requestId, tx);
     if (!request || request.roomId !== roomId)
       throw new AppError(404, "Join request not found.");
+    applicantId = request.userId;
     if (request.status === decision) return requestSummary(request);
     if (request.status !== "PENDING")
       throw new AppError(
@@ -126,5 +141,27 @@ export const decideJoinRequest = (userId, roomId, requestId, decision) => {
         tx,
       ),
     );
+  }).then(async (result) => {
+    await notifyRequest(roomId, applicantId);
+    if (decision === "APPROVED") await publishRoom(roomId, "members:changed");
+    return result;
   });
 };
+
+async function notifyRequest(roomId, userId) {
+  try {
+    const owners = await prisma.roomMember.findMany({
+      where: { roomId, role: "OWNER" },
+      select: { userId: true },
+    });
+    publishUsers(
+      [userId, ...owners.map((owner) => owner.userId)],
+      "requests:changed",
+      { roomId },
+    );
+  } catch {
+    console.error(
+      "Join request notification deferred to client reconciliation.",
+    );
+  }
+}

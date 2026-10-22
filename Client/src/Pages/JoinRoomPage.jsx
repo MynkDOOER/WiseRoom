@@ -1,3 +1,4 @@
+import useLiveRefresh from "../realtime/useLiveRefresh";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -19,6 +20,9 @@ function JoinRoomDetails({ code }) {
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useLiveRefresh(() => setAttempt((value) => value + 1), {
+    types: "requests:changed room:deleted members:changed",
+  });
   useEffect(() => {
     const controller = new AbortController();
     async function load() {
@@ -90,7 +94,7 @@ function JoinRoomDetails({ code }) {
             <h1>{result.room.name}</h1>
             <p className="muted">
               {pending
-                ? "Your request is with the owner. Refresh to check their decision."
+                ? "Your request is with the owner. This page updates when they decide."
                 : result.request?.status === "REJECTED"
                   ? "Your previous request was declined. You can request again after a short wait."
                   : "The room owner approves new members."}

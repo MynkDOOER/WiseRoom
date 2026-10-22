@@ -1,3 +1,4 @@
+import useLiveRefresh from "../realtime/useLiveRefresh";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
@@ -10,6 +11,9 @@ export default function MyJoinRequests() {
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(null);
+  useLiveRefresh(() => setAttempt((value) => value + 1), {
+    types: "requests:changed room:deleted members:changed",
+  });
   useEffect(() => {
     const controller = new AbortController();
     async function load() {

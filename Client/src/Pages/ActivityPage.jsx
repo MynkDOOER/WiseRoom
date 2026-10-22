@@ -1,3 +1,4 @@
+import useLiveRefresh from "../realtime/useLiveRefresh";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,10 @@ export default function ActivityPage({ kind }) {
     [attempt, setAttempt] = useState(0),
     [busy, setBusy] = useState(false);
   const paginated = useRef(false);
+  useLiveRefresh(() => setAttempt((value) => value + 1), {
+    types:
+      "message:created message:updated message:deleted thread:changed saved:changed read:changed room:removed room:deleted",
+  });
   useEffect(() => {
     paginated.current = false;
     const controller = new AbortController();
@@ -43,12 +48,8 @@ export default function ActivityPage({ kind }) {
       }
     }
     load();
-    const timer = setInterval(() => {
-      if (!document.hidden && !paginated.current) load();
-    }, 15000);
     return () => {
       controller.abort();
-      clearInterval(timer);
     };
   }, [kind, attempt, getToken]);
   const updated = useCallback(

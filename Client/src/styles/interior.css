@@ -698,3 +698,38 @@
     margin-left: 0;
   }
 }
+
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--muted);
+  font: 10px var(--meta-font);
+}
+.connection-status i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c8a17e;
+}
+.connection-status.connected i {
+  background: #9be3c4;
+}
+.connection-status.authentication-required {
+  color: #ffad99;
+}
+.connection-status.authentication-required i {
+  background: #ffad99;
+}
+@media (max-width: 700px) {
+  .connection-status.connected {
+    display: none;
+  }
+  .connection-status {
+    font-size: 8px;
+    max-width: 94px;
+    white-space: normal;
+  }
+}

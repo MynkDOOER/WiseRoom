@@ -1,4 +1,10 @@
 import {
+  publishRoom,
+  publishUsers,
+  revokeRoomAccess,
+  closeRoom,
+} from "../realtime/events.js";
+import {
   transferRoomOwnership,
   deleteRoomForOwner,
   renameRoomForOwner,
@@ -12,14 +18,13 @@ import {
 } from "../services/roomAvatarService.js";
 export const renameRoom = async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      room: await renameRoomForOwner(
-        req.userId,
-        req.params.roomId,
-        req.body?.name,
-      ),
-    });
+    const room = await renameRoomForOwner(
+      req.userId,
+      req.params.roomId,
+      req.body?.name,
+    );
+    await publishRoom(req.params.roomId, "room:changed");
+    res.json({ success: true, room });
   } catch (error) {
     next(error);
   }
@@ -31,6 +36,8 @@ export const removeMember = async (req, res, next) => {
       req.params.roomId,
       req.params.userId,
     );
+    revokeRoomAccess(req.params.roomId, req.params.userId);
+    await publishRoom(req.params.roomId, "members:changed");
     res.status(204).end();
   } catch (error) {
     next(error);
@@ -38,20 +45,24 @@ export const removeMember = async (req, res, next) => {
 };
 export const resetInvite = async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      invite: await getInviteForOwner(req.userId, req.params.roomId, true),
+    const invite = await getInviteForOwner(req.userId, req.params.roomId, true);
+    publishUsers([req.userId], "invitation:changed", {
+      roomId: req.params.roomId,
     });
+    res.json({ success: true, invite });
   } catch (error) {
     next(error);
   }
 };
 export const saveAvatar = async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      ...(await saveRoomAvatar(req.userId, req.params.roomId, req.body)),
-    });
+    const avatar = await saveRoomAvatar(
+      req.userId,
+      req.params.roomId,
+      req.body,
+    );
+    await publishRoom(req.params.roomId, "room:changed");
+    res.json({ success: true, ...avatar });
   } catch (error) {
     next(error);
   }
@@ -59,6 +70,7 @@ export const saveAvatar = async (req, res, next) => {
 export const resetAvatar = async (req, res, next) => {
   try {
     await resetRoomAvatar(req.userId, req.params.roomId);
+    await publishRoom(req.params.roomId, "room:changed");
     res.status(204).end();
   } catch (error) {
     next(error);
@@ -80,21 +92,21 @@ export const showAvatar = async (req, res, next) => {
 
 export const transferOwnership = async (req, res, next) => {
   try {
-    res.json({
-      success: true,
-      ...(await transferRoomOwnership(
-        req.userId,
-        req.params.roomId,
-        req.body?.userId,
-      )),
-    });
+    const result = await transferRoomOwnership(
+      req.userId,
+      req.params.roomId,
+      req.body?.userId,
+    );
+    await publishRoom(req.params.roomId, "ownership:changed");
+    res.json({ success: true, ...result });
   } catch (error) {
     next(error);
   }
 };
 export const deleteRoom = async (req, res, next) => {
   try {
-    await deleteRoomForOwner(req.userId, req.params.roomId);
+    const recipients = await deleteRoomForOwner(req.userId, req.params.roomId);
+    closeRoom(req.params.roomId, recipients);
     res.status(204).end();
   } catch (error) {
     next(error);

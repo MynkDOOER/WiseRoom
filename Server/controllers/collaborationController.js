@@ -1,3 +1,4 @@
+import { publishRoom, publishUsers } from "../realtime/events.js";
 import * as service from "../services/collaborationService.js";
 
 const handle = (operation) => async (req, res, next) => {
@@ -10,23 +11,32 @@ const handle = (operation) => async (req, res, next) => {
   }
 };
 
-export const reactToMessage = handle(async (req) => ({
-  message: await service.changeReaction(
+export const reactToMessage = handle(async (req) => {
+  const message = await service.changeReaction(
     req.userId,
     req.params.roomId,
     req.params.messageId,
     req.body,
-  ),
-}));
-
-export const saveMessage = handle(async (req) => ({
-  message: await service.changeSaved(
+  );
+  await publishRoom(req.params.roomId, "message:updated", {
+    messageId: message.id,
+    parentId: message.parentId,
+  });
+  return { message };
+});
+export const saveMessage = handle(async (req) => {
+  const message = await service.changeSaved(
     req.userId,
     req.params.roomId,
     req.params.messageId,
     req.body?.active,
-  ),
-}));
+  );
+  publishUsers([req.userId], "saved:changed", {
+    roomId: req.params.roomId,
+    messageId: message.id,
+  });
+  return { message };
+});
 
 export const thread = handle((req) =>
   service.getThread(
@@ -37,14 +47,19 @@ export const thread = handle((req) =>
   ),
 );
 
-export const reply = handle(async (req) => ({
-  message: await service.replyToThread(
+export const reply = handle(async (req) => {
+  const message = await service.replyToThread(
     req.userId,
     req.params.roomId,
     req.params.messageId,
     req.body?.body,
-  ),
-}));
+  );
+  await publishRoom(req.params.roomId, "thread:changed", {
+    messageId: message.id,
+    parentId: message.parentId,
+  });
+  return { message };
+});
 
 export const changes = handle((req) =>
   service.getChanges(req.userId, req.params.roomId, req.query.after),
@@ -56,6 +71,7 @@ export const read = handle(async (req) => {
     req.params.roomId,
     req.body?.messageId,
   );
+  publishUsers([req.userId], "read:changed", { roomId: req.params.roomId });
 });
 
 export const presence = handle((req) =>
@@ -74,8 +90,10 @@ export const unread = handle((req) => service.unreadFor(req.userId));
 
 export const readAll = handle(async (req) => {
   await service.readAllFor(req.userId);
+  publishUsers([req.userId], "read:changed");
 });
 
 export const pin = handle(async (req) => {
   await service.pinRoom(req.userId, req.params.roomId, req.body?.pinned);
+  publishUsers([req.userId], "rooms:changed", { roomId: req.params.roomId });
 });

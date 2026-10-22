@@ -1,3 +1,4 @@
+import useLiveRefresh from "../realtime/useLiveRefresh";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { getMembers, removeMember, transferOwnership } from "../api/rooms";
@@ -24,6 +25,10 @@ export default function RoomPeopleDialog({
   const [feedback, setFeedback] = useState("");
   const [target, setTarget] = useState(null);
   const [transferTarget, setTransferTarget] = useState(null);
+  useLiveRefresh(() => setAttempt((value) => value + 1), {
+    roomId: room.id,
+    types: "members:changed requests:changed ownership:changed",
+  });
   useEffect(() => {
     let active = true;
     async function load() {

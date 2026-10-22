@@ -142,3 +142,22 @@ export const getDeletedMessagesForMember = (userId, roomId, ids) => {
     });
   });
 };
+
+export const syncMessagesForMember = (userId, roomId, ids) => {
+  if (
+    !Array.isArray(ids) ||
+    ids.length > 100 ||
+    ids.some((id) => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))
+  )
+    throw new AppError(400, "Supply up to 100 message IDs.");
+  return withMembershipTransaction(async (tx) => {
+    await requireRoomMembership(userId, roomId, tx);
+    return tx.message.findMany({
+      where: { roomId, id: { in: ids } },
+      select: {
+        ...messageFields,
+        savedBy: { where: { userId }, select: { userId: true } },
+      },
+    });
+  });
+};

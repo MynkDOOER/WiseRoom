@@ -83,7 +83,7 @@ The remaining implementation must carry room permissions through upload, indexin
 | Authentication and user persistence | Implemented | Clerk identity and synchronized PostgreSQL users. |
 | Rooms and membership | Implemented | Owners/members, invitations, join requests, approval, removal, and room settings. |
 | Persistent messaging | Implemented | Member-only text/voice messages, cursor history, and code rendering. |
-| Collaboration | Implemented | Threads, reactions, saved messages, pins, unread activity, presence, and typing via polling. |
+| Collaboration | Implemented | Threads, reactions, saved messages, pins, unread activity, presence, and typing with Socket.IO live updates. |
 | Application experience | Implemented | Responsive workspace, authentication screens, shared design system, and message timeline. |
 | Document ingestion | Remaining | Authorized uploads, text extraction, metadata, and processing lifecycle. |
 | RAG indexing and retrieval | Remaining | Chunking, embeddings, vector indexing, and room-scoped semantic retrieval. |
@@ -114,7 +114,7 @@ The following capabilities are implemented in the current collaboration foundati
 - **Code snippets** with syntax highlighting and a copy action.
 - **Emoji/expression insertion**, message reactions, and threaded replies.
 - **Saved messages**, pinned rooms, unread counts, and an activity Inbox.
-- **Online presence and typing indicators**, plus automatic message updates through authenticated polling.
+- **Online presence and typing indicators**, plus Socket.IO updates for messages, threads, reactions, room changes and invitations, with authenticated API catch-up.
 - **Search within loaded messages**, a jump-to-latest action, and a draggable timeline with actual message previews.
 
 ### Interface
@@ -178,7 +178,7 @@ Screenshots use development rooms. Example AI/document content appears only in t
 
 The RAG layer will add document processing, embedding generation, vector retrieval, model integration, and source citation handling. Those integrations are not installed or wired into the current application yet.
 
-**Live update implementation:** messages, presence, typing, and activity currently use polling. Socket.IO and WebSocket delivery are not part of the current implementation. Presence is held in server memory; messages and collaboration records are persisted in PostgreSQL.
+**Live update implementation:** Socket.IO 4 sends authenticated, scoped notifications for messages, collaboration, room management and invitations. HTTP APIs persist data and reconcile missed updates after reconnect/focus, with a shared 60-second fallback. Presence is process-local; persistent records remain in PostgreSQL. See [the realtime walkthrough](REALTIME.md).
 
 ## Getting started
 
@@ -307,7 +307,7 @@ The backend follows **route → controller → service → repository** boundari
 
 Each room has exactly one owner. The current owner can transfer ownership to an existing member (becoming a regular member), or permanently delete the room. Owners must transfer ownership before leaving. Invitation actions require authentication, and existing members are directed into the room.
 
-Messages from the signed-in account appear on the right; other members’ messages appear on the left. Authors can delete their own messages for everyone: text/recordings are removed and replaced by “This message was deleted”, while message order and existing thread replies remain. Deleted messages cannot be saved or reacted to. Deletion updates use the existing polling flow.
+Messages from the signed-in account appear on the right; other members’ messages appear on the left. Authors can delete their own messages for everyone: text/recordings are removed and replaced by “This message was deleted”, while message order and existing thread replies remain. Deleted messages cannot be saved or reacted to. Deletion updates arrive through Socket.IO notifications and authenticated API reconciliation.
 
 ## API overview
 
@@ -352,7 +352,7 @@ Run these from their respective directories:
 ## Current boundaries
 
 - **Media is local:** room pictures and voice recordings live under `Server/data/avatars` and `Server/data/voice`. Their files are not stored in Neon or committed to Git. A hosted deployment needs durable media storage.
-- **Live updates use polling:** presence is process-local, so it is not yet shared across multiple API instances.
+- **Realtime targets one backend instance:** multiple instances require a shared Socket.IO adapter and shared presence. Notifications are not a durable event log; API reconciliation recovers persisted state.
 - **Search/timeline cover loaded history:** older pages become available through message pagination; this is not full-database message search.
 - **AI/document features are a preview:** no document indexing, embeddings, retrieval-augmented generation, or `@wise` answers are implemented yet.
 - **Deployment needs environment-specific configuration:** use production Clerk configuration, the deployed API URL, and the appropriate frontend CORS origin.
@@ -384,7 +384,8 @@ Run these from their respective directories:
 
 - [ ] Connect durable hosted storage for uploads and media
 - [ ] Finalize hosted frontend/API/Clerk/database configuration
-- [ ] Evaluate push-based updates and shared presence infrastructure in a later milestone
+- [x] Socket.IO live updates, scoped subscriptions, reconnect catch-up and expiring typing
+- [ ] Shared presence and Socket.IO adapter for multiple backend instances
 
 ## Contributing
 

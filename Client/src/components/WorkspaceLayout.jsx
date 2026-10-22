@@ -1,3 +1,4 @@
+import ConnectionStatus from "../realtime/ConnectionStatus";
 import { useEffect, useRef, useState } from "react";
 import { UserButton } from "@clerk/clerk-react";
 import { NavLink, Outlet, useLocation, useParams } from "react-router-dom";
@@ -311,6 +312,7 @@ export default function WorkspaceLayout() {
               <Icon name="bell" size={16} />
             </NavLink>
           )}
+          <ConnectionStatus />
           <div className="mobile-account">
             <UserButton />
           </div>

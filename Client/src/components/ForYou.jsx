@@ -7,7 +7,7 @@ import MyJoinRequests from "./MyJoinRequests";
 import Icon from "./Icon";
 export default function ForYou() {
   const { getToken } = useAuth();
-  const { rooms, unreadTotal } = useWorkspace();
+  const { rooms, unreadTotal, activityVersion } = useWorkspace();
   const [messages, setMessages] = useState(null),
     [error, setError] = useState("");
   const pending = rooms.filter(
@@ -27,7 +27,7 @@ export default function ForYou() {
         if (!controller.signal.aborted) setError(cause.message);
       });
     return () => controller.abort();
-  }, [getToken, unreadTotal]);
+  }, [getToken, unreadTotal, activityVersion]);
   return (
     <aside className="home-for-you" id="for-you">
       <div className="section-heading">

@@ -1,5 +1,7 @@
 import "dotenv/config";
 import express from "express";
+import { createServer } from "node:http";
+import { createRealtime } from "./realtime/server.js";
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
 
@@ -13,11 +15,14 @@ import activityRoutes from "./routes/activityRoutes.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+const origin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+const httpServer = createServer(app);
+createRealtime(httpServer, origin);
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin,
     credentials: true,
   }),
 );
@@ -51,6 +56,6 @@ app.get("/test-db", async (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, process.env.HOST || "127.0.0.1", () => {
   console.log(`Server running on port ${PORT} 💮`);
 });

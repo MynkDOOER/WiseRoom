@@ -144,3 +144,21 @@ export async function syncDeletedMessages(token, roomId, messages, signal) {
   }
   return deleted;
 }
+
+export async function syncLoadedMessages(token, roomId, messages, signal) {
+  const ids = [...new Set(messages.map((message) => message.id))],
+    rows = [];
+  for (let offset = 0; offset < ids.length; offset += 100) {
+    const page = await apiRequest(
+      token,
+      `/rooms/${encodeURIComponent(roomId)}/messages/sync`,
+      {
+        method: "POST",
+        body: { ids: ids.slice(offset, offset + 100) },
+        signal,
+      },
+    );
+    rows.push(...page.messages);
+  }
+  return rows;
+}

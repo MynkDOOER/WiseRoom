@@ -1,3 +1,4 @@
+import { useRealtime } from "../realtime/context";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import {
@@ -7,7 +8,7 @@ import {
   notifyActivity,
 } from "../api/collaboration";
 import Modal from "./Modal";
-import { syncDeletedMessages } from "../api/messages";
+import { syncLoadedMessages } from "../api/messages";
 import { mergeMessage, mergeMessages } from "../utils/mergeMessages";
 import MessageItem from "./MessageItem";
 import Icon from "./Icon";
@@ -19,6 +20,7 @@ export default function ThreadPanel({
   onTyping = () => {},
 }) {
   const { getToken } = useAuth();
+  const { subscribe } = useRealtime();
   const [data, setData] = useState(null),
     [error, setError] = useState(""),
     [draft, setDraft] = useState(""),
@@ -27,15 +29,28 @@ export default function ThreadPanel({
   const scroll = useRef(null),
     pending = useRef(false),
     controller = useRef(null),
-    dataRef = useRef(null);
+    dataRef = useRef(null),
+    closeRef = useRef(onClose);
+  useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
   useEffect(() => {
     const abort = new AbortController();
     controller.current = abort;
+    let timer,
+      queued = false;
+    function requestSync() {
+      clearTimeout(timer);
+      timer = setTimeout(load, 120);
+    }
     async function load() {
-      if (pending.current) return;
+      if (pending.current) {
+        queued = true;
+        return;
+      }
       pending.current = true;
       try {
         const token = await getToken();
@@ -48,7 +63,28 @@ export default function ThreadPanel({
           abort.signal,
         );
         if (abort.signal.aborted) return;
-        const tombstones = await syncDeletedMessages(
+        // Bridge a reconnect gap larger than one reply page without dropping loaded history.
+        const known = new Set(
+          (dataRef.current?.replies || []).map((reply) => reply.id),
+        );
+        let cursor = page.pagination.nextCursor;
+        let overlap = page.replies.some((reply) => known.has(reply.id));
+        while (known.size && !overlap && cursor) {
+          const olderPage = await getThread(
+            token,
+            roomId,
+            messageId,
+            cursor,
+            abort.signal,
+          );
+          if (abort.signal.aborted) return;
+          page.replies = mergeMessages(olderPage.replies, page.replies);
+          overlap = olderPage.replies.some((reply) => known.has(reply.id));
+          const next = olderPage.pagination.nextCursor;
+          if (next === cursor) break;
+          cursor = next;
+        }
+        const tombstones = await syncLoadedMessages(
           token,
           roomId,
           dataRef.current?.replies || [],
@@ -84,17 +120,35 @@ export default function ThreadPanel({
         if (!abort.signal.aborted) setError(cause.message);
       } finally {
         pending.current = false;
+        if (queued && !abort.signal.aborted) {
+          queued = false;
+          requestSync();
+        }
       }
     }
+    const stop = subscribe((event) => {
+      if (event.roomId && event.roomId !== roomId) return;
+      if (["room:removed", "room:deleted"].includes(event.type)) {
+        abort.abort();
+        closeRef.current();
+      } else if (
+        [
+          "sync",
+          "message:updated",
+          "message:deleted",
+          "thread:changed",
+          "saved:changed",
+        ].includes(event.type)
+      )
+        requestSync();
+    });
     load();
-    const tick = setInterval(() => {
-      if (!document.hidden) load();
-    }, 6000);
     return () => {
       abort.abort();
-      clearInterval(tick);
+      clearTimeout(timer);
+      stop();
     };
-  }, [getToken, roomId, messageId, onParentUpdated]);
+  }, [getToken, roomId, messageId, onParentUpdated, subscribe]);
   async function send(event) {
     event.preventDefault();
     if (busy || !draft.trim()) return;

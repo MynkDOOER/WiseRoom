@@ -1,3 +1,4 @@
+import useLiveRefresh from "../realtime/useLiveRefresh";
 import { useEffect, useState } from "react";
 import { pinRoom } from "../api/collaboration";
 import { useAuth } from "@clerk/clerk-react";
@@ -24,6 +25,7 @@ export default function RoomSettingsDialog({
 }) {
   const { getToken } = useAuth();
   const owner = room.role === "OWNER";
+  const [inviteAttempt, setInviteAttempt] = useState(0);
   const [name, setName] = useState(room.name);
   const [invite, setInvite] = useState(null);
   const [busy, setBusy] = useState("");
@@ -32,6 +34,10 @@ export default function RoomSettingsDialog({
   const [crop, setCrop] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [deleteName, setDeleteName] = useState("");
+  useLiveRefresh(() => setInviteAttempt((value) => value + 1), {
+    roomId: room.id,
+    types: "invitation:changed ownership:changed",
+  });
   useEffect(() => {
     if (!owner) return;
     let active = true;
@@ -47,7 +53,7 @@ export default function RoomSettingsDialog({
     return () => {
       active = false;
     };
-  }, [room.id, owner, getToken]);
+  }, [room.id, owner, getToken, inviteAttempt]);
   async function action(kind) {
     if (busy) return;
     setBusy(kind);

@@ -212,9 +212,21 @@ export const deleteRoomForOwner = async (userId, roomId) => {
       where: { roomId, voiceKey: { not: null } },
       select: { voiceKey: true },
     });
+    const recipients = await tx.roomMember.findMany({
+      where: { roomId },
+      select: { userId: true },
+    });
+    const applicants = await tx.roomJoinRequest.findMany({
+      where: { roomId, status: "PENDING" },
+      select: { userId: true },
+    });
     // Foreign keys cascade membership, requests, messages, reactions and saves.
     await tx.room.delete({ where: { id: roomId } });
-    return { avatarKey: room.avatarKey, recordings };
+    return {
+      avatarKey: room.avatarKey,
+      recordings,
+      recipients: [...recipients, ...applicants].map((row) => row.userId),
+    };
   });
   // Storage failures must not report a committed room deletion as a failure.
   for (const recording of assets.recordings) {
@@ -233,4 +245,5 @@ export const deleteRoomForOwner = async (userId, roomId) => {
       "Could not remove a deleted room picture from local storage.",
     );
   }
+  return assets.recipients;
 };

@@ -8,7 +8,7 @@ See [DESIGN.md](DESIGN.md) and [Client/UI-KIT.md](Client/UI-KIT.md). The collabo
 
 ## Room-management foundation
 
-Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` with the approved room-management scope and the shared homepage design. Socket.IO is excluded.
+Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` with the approved room-management scope and the shared homepage design. Socket.IO was excluded from that earlier room-management milestone; the realtime milestone below adds it.
 
 - Reusable UI kit and development reference at `/ui-kit`.
 - Warm charcoal/ivory/orange palette; Bricolage Grotesque headings, Hanken Grotesk UI/messages, JetBrains Mono code/metadata.
@@ -21,7 +21,7 @@ Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` with the approved room-
 - Existing members follow the link directly into the room. Removed members require a new approved request.
 - Safe sign-in/sign-up return paths preserve valid invitations.
 
-Current message/activity/presence/typing updates use authenticated polling, with manual refresh/retry available. HTTP persistence, cursor pagination, and membership checks are preserved. Socket.IO is not implemented. The public AI/document preview is labeled; live rooms use actual records.
+Message/activity/presence/typing updates now use Socket.IO notifications with authenticated API reconciliation; manual refresh/retry remains available. HTTP persistence, cursor pagination, and membership checks are preserved. The public AI/document preview is labeled; live rooms use actual records.
 
 ## Database / compatibility
 
@@ -86,7 +86,7 @@ Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. 
 
 - The room-management verification run used one real signed-in account. Live two-account request/approval/decline/removal was not exercised; authorization/state changes are covered by isolated HTTP tests with mocked authentication/database. Do not describe those tests as live multi-user verification.
 - Invitation copy uses the browser clipboard API with a visible selectable-link fallback. A previous browser automation clipboard attempt timed out; clipboard completion is not claimed here.
-- Hosted storage/deployment, email notifications, and document/RAG processing remain unimplemented. Current live updates use polling.
+- Hosted storage/deployment, email notifications, and document/RAG processing remain unimplemented. Current live updates use Socket.IO with API reconciliation.
 
 ## Ownership and message lifecycle — 2026-10-21
 
@@ -94,9 +94,9 @@ Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. 
 - Current owners can permanently delete rooms from Room settings after confirming the room name. Database relations cascade; local voice and avatar assets are cleaned up after commit.
 - Owners can transfer ownership to an existing member through Manage people. Serializable transactions demote the previous owner and promote the next; a partial unique index prevents multiple OWNER memberships. The historical `createdById` stays unchanged and does not grant owner permissions.
 - Message authors can delete their own text, code or voice messages. `deletedAt` records a tombstone; original content, reactions and saves are removed, existing replies remain. Voice downloads no longer resolve after deletion.
-- Loaded history synchronizes deletion states through authenticated, room-scoped polling, including messages outside the latest page. Deleted state wins over stale polling responses.
+- Loaded history synchronizes deletion states through Socket.IO notifications and authenticated room-scoped reconciliation, including messages outside the latest page. Deleted state wins over stale polling responses.
 - Migration: `20261021000000_room_ownership_message_deletion`.
-- Cached chat does not automatically disappear from another browser when a member is removed. The server denies subsequent reads/writes; active clients recheck access through polling or manual refresh.
+- Connected clients receive room access revocation and clear the room view when membership is removed. The server also denies subsequent reads/writes; reconnect and fallback reconciliation cover missed notifications.
 - Full screen-reader/a11y certification and long-list multi-user UX testing remain separate from the checks above.
 
 No code was committed or pushed. Changes that existed before this work were preserved. Original overwritten files were backed up outside the repository in the task working area. No secret values were printed or copied into application source.
@@ -121,3 +121,11 @@ Voice milestone verification (historical): frontend lint/build, 3 frontend tests
 [REPORT-REFERENCE-UPDATE.md](REPORT-REFERENCE-UPDATE.md) records collaboration features, migrations, APIs, and historical verification (82 backend and 15 frontend tests).
 
 The current design is documented in [DESIGN.md](DESIGN.md), [REPORT-LANDING-REDESIGN.md](REPORT-LANDING-REDESIGN.md), and [REPORT-INTERIOR-CONSISTENCY.md](REPORT-INTERIOR-CONSISTENCY.md). Later landing/auth/interior changes were checked with lint/build and browser inspection; automated tests were not rerun for those visual-only updates.
+
+## Socket.IO milestone — 2026-10-22
+
+Implemented Socket.IO 4 on the Express HTTP server and a shared authenticated React provider. Token refresh does not reload the page. Current membership is checked before presence subscriptions, and identifiers-only notifications cause permission-checked HTTP refreshes. Personal saved/read events and owner/applicant request events stay private.
+
+Live coverage includes text/code/voice messages, deletions, reactions, threads, read/saved state, room names/pictures, membership, owner transfer, deletion, requests and invitation reset. Multiple visible tabs count as one online user; typing expires and is never buffered offline.
+
+Frequent 4/6/15-second polling was replaced by event-driven refreshes. Reconnect, page focus and a shared 60-second fallback reconcile database state, loaded message snapshots and cursor catch-up. Server packet replay is not enabled, so revoked membership is not restored from an old socket session. This is a single-instance implementation, not a durable event outbox or a multi-server presence system. See [REALTIME.md](REALTIME.md) for the beginner walkthrough, event map and verification checklist.
