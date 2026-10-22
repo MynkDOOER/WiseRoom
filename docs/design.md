@@ -54,7 +54,7 @@ Apply this same system to future document ingestion, retrieval, citations, and `
 
 ## Related documentation
 
-- [UI component kit](Client/UI-KIT.md)
-- [Product vision, setup, progress, and roadmap](README.md)
-- [Implementation and historical verification](IMPLEMENTATION.md)
-- [Interior implementation](REPORT-INTERIOR-CONSISTENCY.md)
+- [UI component kit](ui/ui-kit.md)
+- [Product vision, setup, progress, and roadmap](../README.md)
+- [Implementation and historical verification](implementation.md)
+- [Interior implementation](reports/interior-consistency.md)

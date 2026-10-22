@@ -1,6 +1,8 @@
 # WiseRoom — current frontend design
 
-The public homepage is the visual source of truth for all frontend screens. This document follows [DESIGN.md](../DESIGN.md) and [UI-KIT.md](UI-KIT.md).
+Source paths in this document are relative to `Client/` unless prefixed with another repository folder.
+
+The public homepage is the visual source of truth for all frontend screens. This document follows [design.md](../design.md) and [ui-kit.md](ui-kit.md).
 
 ## Visual direction
 
@@ -40,6 +42,6 @@ Preserve authentication, room/member permissions, existing URLs, API integration
 
 The initial shared-header work on October 19 recorded frontend lint/build (99 modules), 38 backend tests, real room switching, member controls, and desktop/mobile overflow checks. Those are historical results for that revision.
 
-Subsequent collaboration work recorded 15 frontend and 82 backend tests; see [REPORT-REFERENCE-UPDATE.md](../REPORT-REFERENCE-UPDATE.md). Current landing/auth/interior updates passed lint/build and browser inspection of desktop/mobile layouts, actual Clerk cards, owner Invite, member management, timeline navigation, and scroll anchoring. Automated tests were not rerun for those visual-only updates; the historical counts are not new test runs.
+Subsequent collaboration work recorded 15 frontend and 82 backend tests; see [collaboration-reference.md](../reports/collaboration-reference.md). Current landing/auth/interior updates passed lint/build and browser inspection of desktop/mobile layouts, actual Clerk cards, owner Invite, member management, timeline navigation, and scroll anchoring. Automated tests were not rerun for those visual-only updates; the historical counts are not new test runs.
 
-See [REPORT-LANDING-REDESIGN.md](../REPORT-LANDING-REDESIGN.md) and [REPORT-INTERIOR-CONSISTENCY.md](../REPORT-INTERIOR-CONSISTENCY.md) for those implementation records. [README.md](../README.md) tracks the full product scope and remaining RAG work.
+See [landing-redesign.md](../reports/landing-redesign.md) and [interior-consistency.md](../reports/interior-consistency.md) for those implementation records. [README.md](../../README.md) tracks the full product scope and remaining RAG work.

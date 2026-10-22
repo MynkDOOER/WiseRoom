@@ -2,7 +2,7 @@
 
 Applied directly to the main project, October 20, 2026.
 
-Current design: [DESIGN.md](DESIGN.md). Components: [Client/UI-KIT.md](Client/UI-KIT.md).
+Current design: [design.md](../design.md). Components: [ui-kit.md](../ui/ui-kit.md).
 
 ## Changes
 
@@ -24,6 +24,6 @@ Current design: [DESIGN.md](DESIGN.md). Components: [Client/UI-KIT.md](Client/UI
 
 ## Main files
 
-`WiseRoomLogo.jsx`, `BrandSignature.jsx`, `MessageRail.jsx`, `RoomContextPanel.jsx`, `ChatPanel.jsx`, `RoomPage.jsx`, `LandingPage.jsx`, `AuthLayout.jsx`, `MemberAvatar.jsx`, `styles/interior.css`, `main.jsx`, and `Client/UI-KIT.md`.
+`WiseRoomLogo.jsx`, `BrandSignature.jsx`, `MessageRail.jsx`, `RoomContextPanel.jsx`, `ChatPanel.jsx`, `RoomPage.jsx`, `LandingPage.jsx`, `AuthLayout.jsx`, `MemberAvatar.jsx`, `styles/interior.css`, `main.jsx`, and `docs/ui/ui-kit.md`.
 
 The timeline covers currently loaded history. Scrolling to its beginning can trigger the existing older-message pagination; it is not a database-wide search or summary feature.

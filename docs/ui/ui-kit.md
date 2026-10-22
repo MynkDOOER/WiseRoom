@@ -1,8 +1,10 @@
 # WiseRoom UI kit
 
+Source paths in this document are relative to `Client/` unless prefixed with another repository folder.
+
 ## Consistency contract
 
-The public landing page is the visual source of truth for the whole product. Use warm charcoal surfaces, ivory text, restrained orange actions, Bricolage Grotesque display headings, Hanken Grotesk UI/messages, and JetBrains Mono metadata/code. Reuse the original logo and shared tokens. [DESIGN.md](../DESIGN.md) is the canonical design reference.
+The public landing page is the visual source of truth for the whole product. Use warm charcoal surfaces, ivory text, restrained orange actions, Bricolage Grotesque display headings, Hanken Grotesk UI/messages, and JetBrains Mono metadata/code. Reuse the original logo and shared tokens. [design.md](../design.md) is the canonical design reference.
 
 - `WiseRoomLogo.jsx` contains the real favicon artwork with its original paths/proportions. Reuse it for the public header/footer, authentication, and sidebar; its entry/hover animation has a reduced-motion fallback.
 - `styles/interior.css` is the final shared product treatment, imported after the other styles. It unifies room framing, surfaces, message typography, member cards, dialogs, navigation, and the compact single-row composer.
@@ -37,7 +39,7 @@ Base tokens/primitives/layout live in `tokens.css`, `ui.css`, and `index.css`. `
 - Public Home (`/`): reference hero, interactive illustrative product preview, animated pipeline, feature grid, real Clerk sign-in and outlined footer wordmark. The AI preview is labeled; it does not write to the database.
 - Workspace (`/workspace`): date, personal greeting, true unread summary, create-room action, inline invitation entry, compact room rows with latest message/time, list/grid toggle and a real activity column.
 - Room header: clickable room avatar to switch rooms, room name, actual member/online counts, member stack, search, personal pin and settings controls. Invite is rendered only for `OWNER` and remains visible on narrow screens. Members can still change the room picture; owner-only rename/invitation/member controls remain enforced.
-- Chat: one left-aligned chronological column, grouped consecutive messages, inline names/timestamps and quiet unboxed text. Hover or keyboard focus reveals actual reaction/thread/message actions. Touch exposes the actions menu.
+- Chat: chronological groups with your messages on the right and other members on the left, grouped consecutive messages, inline names/timestamps and quiet unboxed text. Hover or keyboard focus reveals actual reaction/thread/message actions. Touch exposes the actions menu.
 - Composer: the compact single-row controls/input layout, with expression/code/voice controls and a persistent Send action that is disabled when empty. Enter sends; Shift+Enter inserts a newline. Recording preview and errors appear only when relevant.
 - Code: supported language syntax coloring, safe escaping and Copy. Highlighting loads as a separate bundle. Unknown languages render as escaped text.
 - Links: cards show actual URL/host/path. There is no remote metadata/image fetch or fabricated title/description.
@@ -50,4 +52,4 @@ Keep native dialog focus containment and focus return. Preserve drafts and histo
 
 ## Verification
 
-The collaboration milestone recorded 15 passing frontend and 82 passing backend tests. Later visual updates passed lint/build and browser checks; automated tests were not rerun for those updates. Live checks covered Home, actual reactions/save/unsave, persisted thread reply, Threads navigation, sidebar pin/unpin, and desktop/mobile layouts at 390px/320px. The user confirmed owner-only invites and cross-account typing. Tests use isolated auth/database doubles; they are distinct from those live checks. See `../IMPLEMENTATION.md` for API/storage limits and the complete implementation report.
+The collaboration milestone recorded 15 passing frontend and 82 passing backend tests. Later visual updates passed lint/build and browser checks; automated tests were not rerun for those updates. Live checks covered Home, actual reactions/save/unsave, persisted thread reply, Threads navigation, sidebar pin/unpin, and desktop/mobile layouts at 390px/320px. The user confirmed owner-only invites and cross-account typing. Tests use isolated auth/database doubles; they are distinct from those live checks. See [the implementation report](../implementation.md) for API/storage limits and the complete implementation report.

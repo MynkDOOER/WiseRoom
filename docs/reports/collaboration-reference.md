@@ -1,10 +1,10 @@
-> Historical UI milestone report. Its polling implementation was superseded by Socket.IO on 2026-10-22; see [REALTIME.md](REALTIME.md) for the current transport and recovery behavior.
+> Historical UI milestone report. Its polling implementation was superseded by Socket.IO on 2026-10-22; see [realtime.md](../realtime.md) for the current transport and recovery behavior.
 
 # WiseRoom reference UI and collaboration update
 
 Implemented in the actual `Downloads/WORKSPACE/WiseRoom` project. Existing authentication, room creation/admission, ownership, member management, local pictures, text history and voice recording are preserved.
 
-Current shared design: [DESIGN.md](DESIGN.md) and [Client/UI-KIT.md](Client/UI-KIT.md). This report preserves the collaboration implementation/verification record.
+Current shared design: [design.md](../design.md) and [ui-kit.md](../ui/ui-kit.md). This report preserves the collaboration implementation/verification record.
 
 ## What changed
 

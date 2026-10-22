@@ -3,8 +3,8 @@
 React 19, Vite 8, React Router, and Clerk power WiseRoom's collaboration workspace and the interface for its upcoming room-scoped RAG workflow.
 
 - [Product vision, setup, architecture, progress, and RAG roadmap](../README.md)
-- [Current shared design direction](../DESIGN.md)
-- [UI component kit](UI-KIT.md)
+- [Current shared design direction](../docs/design.md)
+- [UI component kit](../docs/ui/ui-kit.md)
 
 ## Current interface
 
@@ -33,7 +33,7 @@ Frontend: `http://localhost:5173`. Default API: `http://localhost:3000`.
 
 ## Styles and routes
 
-`src/main.jsx` loads the styles; `styles/interior.css` is last and defines the final shared visual treatment. `styles/auth.css` and `styles/authAppearance.js` style real Clerk forms. Landing styles are scoped and exclude Clerk descendants from their reset. See [DESIGN.md](../DESIGN.md) for the complete cascade.
+`src/main.jsx` loads the styles; `styles/interior.css` is last and defines the final shared visual treatment. `styles/auth.css` and `styles/authAppearance.js` style real Clerk forms. Landing styles are scoped and exclude Clerk descendants from their reset. See [design.md](../docs/design.md) for the complete cascade.
 
 Public landing: `/`. Authentication: `/sign-in`, `/sign-up`. Signed-in views: `/workspace`, `/rooms/:roomId`, `/inbox`, `/threads`, `/saved`, `/join/:code`. The `/ui-kit` component reference is development-only.
 

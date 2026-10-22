@@ -4,7 +4,7 @@
 
 The public homepage is the visual source of truth: warm charcoal surfaces, ivory text, orange actions, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata. All brand placements share the original animated logo. Chat uses a framed conversation, compact single-row composer, real member context, and an interactive timeline.
 
-See [DESIGN.md](DESIGN.md) and [Client/UI-KIT.md](Client/UI-KIT.md). The collaboration foundation supports the remaining document ingestion, embedding, retrieval, and cited-answer milestones in [README.md](README.md).
+See [design.md](design.md) and [ui-kit.md](ui/ui-kit.md). The collaboration foundation supports the remaining document ingestion, embedding, retrieval, and cited-answer milestones in [README.md](../README.md).
 
 ## Room-management foundation
 
@@ -118,9 +118,9 @@ Voice backend layers:
 Voice milestone verification (historical): frontend lint/build, 3 frontend tests, 65 backend tests (including 13 voice tests), and patch whitespace. Live UI checks include desktop/mobile composer, font mapping, expression insertion, code insertion and maximum-length validation. The user confirmed live recording/playback in their browser. No Socket.IO was added at that milestone; polling collaboration updates were added later. No secrets were printed or copied.
 
 ## Reference UI and collaboration update
-[REPORT-REFERENCE-UPDATE.md](REPORT-REFERENCE-UPDATE.md) records collaboration features, migrations, APIs, and historical verification (82 backend and 15 frontend tests).
+[collaboration-reference.md](reports/collaboration-reference.md) records collaboration features, migrations, APIs, and historical verification (82 backend and 15 frontend tests).
 
-The current design is documented in [DESIGN.md](DESIGN.md), [REPORT-LANDING-REDESIGN.md](REPORT-LANDING-REDESIGN.md), and [REPORT-INTERIOR-CONSISTENCY.md](REPORT-INTERIOR-CONSISTENCY.md). Later landing/auth/interior changes were checked with lint/build and browser inspection; automated tests were not rerun for those visual-only updates.
+The current design is documented in [design.md](design.md), [landing-redesign.md](reports/landing-redesign.md), and [interior-consistency.md](reports/interior-consistency.md). Later landing/auth/interior changes were checked with lint/build and browser inspection; automated tests were not rerun for those visual-only updates.
 
 ## Socket.IO milestone — 2026-10-22
 
@@ -128,4 +128,4 @@ Implemented Socket.IO 4 on the Express HTTP server and a shared authenticated Re
 
 Live coverage includes text/code/voice messages, deletions, reactions, threads, read/saved state, room names/pictures, membership, owner transfer, deletion, requests and invitation reset. Multiple visible tabs count as one online user; typing expires and is never buffered offline.
 
-Frequent 4/6/15-second polling was replaced by event-driven refreshes. Reconnect, page focus and a shared 60-second fallback reconcile database state, loaded message snapshots and cursor catch-up. Server packet replay is not enabled, so revoked membership is not restored from an old socket session. This is a single-instance implementation, not a durable event outbox or a multi-server presence system. See [REALTIME.md](REALTIME.md) for the beginner walkthrough, event map and verification checklist.
+Frequent 4/6/15-second polling was replaced by event-driven refreshes. Reconnect, page focus and a shared 60-second fallback reconcile database state, loaded message snapshots and cursor catch-up. Server packet replay is not enabled, so revoked membership is not restored from an old socket session. This is a single-instance implementation, not a durable event outbox or a multi-server presence system. See [realtime.md](realtime.md) for the beginner walkthrough, event map and verification checklist.

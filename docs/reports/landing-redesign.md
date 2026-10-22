@@ -1,6 +1,6 @@
 # WiseRoom — reference landing redesign
 
-Current design: [DESIGN.md](DESIGN.md). Later logo/interior work: [REPORT-INTERIOR-CONSISTENCY.md](REPORT-INTERIOR-CONSISTENCY.md).
+Current design: [design.md](../design.md). Later logo/interior work: [interior-consistency.md](interior-consistency.md).
 
 ## Reference
 
@@ -27,7 +27,7 @@ The user's WiseRoom Genspark landing page and seven screenshots supplied on Octo
 - `Client/src/components/AuthLayout.jsx`
 - `Client/src/App.jsx`, `main.jsx`, `Client/index.html`
 - Navigation links in WorkspaceLayout, ChatPanel, RoomPage, JoinRoomPage, UIKitPage; `utils/authReturn.js`
-- `Client/UI-KIT.md` and the UI kit page reflect current colors and typography.
+- `docs/ui/ui-kit.md` and the UI kit page reflect current colors and typography.
 - Existing navigation assertion updated to expect `/workspace` as the safe fallback.
 
 ## Landing verification (historical milestone results)

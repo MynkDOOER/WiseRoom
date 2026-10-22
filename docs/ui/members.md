@@ -1,10 +1,12 @@
 # Compact members UI — 2026-10-20
 
+Source paths in this document are relative to `Client/` unless prefixed with another repository folder.
+
 Applied to the main project at C:\Users\mayan\Downloads\WORKSPACE\WiseRoom.
 
 ## Current design
 
-Follow [DESIGN.md](../DESIGN.md) and [UI-KIT.md](UI-KIT.md): warm charcoal, ivory, orange, Bricolage Grotesque headings, Hanken Grotesk copy, and JetBrains Mono labels. The elastic header stack opens the compact member card; the desktop RoomContextPanel complements it with actual members/details and existing settings/management actions. Narrow layouts retain header access.
+Follow [design.md](../design.md) and [ui-kit.md](ui-kit.md): warm charcoal, ivory, orange, Bricolage Grotesque headings, Hanken Grotesk copy, and JetBrains Mono labels. The elastic header stack opens the compact member card; the desktop RoomContextPanel complements it with actual members/details and existing settings/management actions. Narrow layouts retain header access.
 
 ## Member-card implementation record
 
@@ -41,6 +43,6 @@ Backend, schema, APIs, dependencies, logo and credentials were not edited.
 
 - The available signed-in account owns two single-member rooms. Multi-avatar neighbor displacement, larger-list search/overflow, and a non-owner leave dialog were not exercised with live users. No memberships or messages were added for this check.
 - Invitation retrieval succeeded, but the browser clipboard action timed out; copy completion was not confirmed. Existing manual token selection remains available.
-- That milestone did not add live transport. The 2026-10-22 realtime milestone adds Socket.IO updates, expiring typing and authenticated API reconciliation; manual refresh remains available. See [REALTIME.md](../REALTIME.md).
+- That milestone did not add live transport. The 2026-10-22 realtime milestone adds Socket.IO updates, expiring typing and authenticated API reconciliation; manual refresh remains available. See [realtime.md](../realtime.md).
 
 Reference: https://github.com/Ashutoshx7/VengeanceUI (ElasticStack supplied by the user).

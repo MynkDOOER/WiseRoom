@@ -18,7 +18,8 @@
   <a href="#features">Features</a> ·
   <a href="#getting-started">Getting started</a> ·
   <a href="#architecture">Architecture</a> ·
-  <a href="#roadmap">Roadmap</a>
+  <a href="#roadmap">Roadmap</a> ·
+  <a href="docs/README.md">Documentation</a>
 </p>
 
 ---
@@ -178,7 +179,7 @@ Screenshots use development rooms. Example AI/document content appears only in t
 
 The RAG layer will add document processing, embedding generation, vector retrieval, model integration, and source citation handling. Those integrations are not installed or wired into the current application yet.
 
-**Live update implementation:** Socket.IO 4 sends authenticated, scoped notifications for messages, collaboration, room management and invitations. HTTP APIs persist data and reconcile missed updates after reconnect/focus, with a shared 60-second fallback. Presence is process-local; persistent records remain in PostgreSQL. See [the realtime walkthrough](REALTIME.md).
+**Live update implementation:** Socket.IO 4 sends authenticated, scoped notifications for messages, collaboration, room management and invitations. HTTP APIs persist data and reconcile missed updates after reconnect/focus, with a shared 60-second fallback. Presence is process-local; persistent records remain in PostgreSQL. See [the realtime walkthrough](docs/realtime.md).
 
 ## Getting started
 
@@ -278,7 +279,7 @@ WiseRoom/
 │   │   ├── styles/         # Design system, auth, landing, and interior styles
 │   │   └── utils/          # Message windows/links and code rendering
 │   ├── tests/
-│   └── UI-KIT.md
+│   └── README.md          # Frontend development setup
 ├── Server/
 │   ├── routes/             # Express API routes
 │   ├── controllers/        # Request/response handling
@@ -288,7 +289,16 @@ WiseRoom/
 │   ├── prisma/             # Schema and checked-in migrations
 │   ├── data/               # Local media; excluded from Git
 │   └── tests/
-└── docs/images/            # Repository screenshots
+├── README.md               # Product overview, setup, progress and screenshots
+└── docs/
+    ├── README.md           # Documentation index
+    ├── architecture.md     # System boundaries and data flow
+    ├── implementation.md   # Implementation and milestone history
+    ├── design.md           # Shared design direction
+    ├── realtime.md         # Socket.IO flow and recovery
+    ├── ui/                 # UI kit, frontend patterns and member controls
+    ├── reports/            # Historical milestone reports
+    └── images/             # Repository screenshots
 ```
 
 The backend follows **route → controller → service → repository** boundaries. Prisma models include `User`, `Room`, `RoomMember`, `RoomJoinRequest`, `Message`, `MessageReaction`, and `SavedMessage`.
@@ -387,9 +397,15 @@ Run these from their respective directories:
 - [x] Socket.IO live updates, scoped subscriptions, reconnect catch-up and expiring typing
 - [ ] Shared presence and Socket.IO adapter for multiple backend instances
 
+## Documentation
+
+Start with the [documentation index](docs/README.md). Detailed guides cover [architecture](docs/architecture.md), [implementation history](docs/implementation.md), [design](docs/design.md), [Socket.IO](docs/realtime.md), and the [UI kit](docs/ui/ui-kit.md). Previous milestone reports are grouped under `docs/reports/`.
+
+Frontend-specific commands remain in [Client/README.md](Client/README.md).
+
 ## Contributing
 
-Issues and pull requests are welcome. Keep changes focused, preserve room membership checks, and follow the existing route/controller/service/repository structure. For interface work, follow [the shared design direction](DESIGN.md) and [the WiseRoom UI kit](Client/UI-KIT.md). Reuse the original animated logo, warm charcoal/ivory/orange tokens, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata.
+Issues and pull requests are welcome. Keep changes focused, preserve room membership checks, and follow the existing route/controller/service/repository structure. For interface work, follow [the shared design direction](docs/design.md) and [the WiseRoom UI kit](docs/ui/ui-kit.md). Reuse the original animated logo, warm charcoal/ivory/orange tokens, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata.
 
 ## License
 
