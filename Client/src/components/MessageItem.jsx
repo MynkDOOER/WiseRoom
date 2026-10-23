@@ -267,7 +267,11 @@ export default function MessageItem({
           ) : message.voiceMime ? (
             <VoiceMessage message={message} roomId={message.roomId} />
           ) : (
-            <MessageContent body={message.body} />
+            <MessageContent
+              body={message.body}
+              roomId={message.roomId}
+              messageId={message.id}
+            />
           )}
           {(reactions.size > 0 || message._count?.replies > 0) && (
             <div className="message-extras">

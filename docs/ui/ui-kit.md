@@ -42,7 +42,7 @@ Base tokens/primitives/layout live in `tokens.css`, `ui.css`, and `index.css`. `
 - Chat: chronological groups with your messages on the right and other members on the left, grouped consecutive messages, inline names/timestamps and quiet unboxed text. Hover or keyboard focus reveals actual reaction/thread/message actions. Touch exposes the actions menu.
 - Composer: the compact single-row controls/input layout, with expression/code/voice controls and a persistent Send action that is disabled when empty. Enter sends; Shift+Enter inserts a newline. Recording preview and errors appear only when relevant.
 - Code: supported language syntax coloring, safe escaping and Copy. Highlighting loads as a separate bundle. Unknown languages render as escaped text.
-- Links: cards show actual URL/host/path. There is no remote metadata/image fetch or fabricated title/description.
+- Links: cards use real page titles/descriptions from Open Graph/Twitter metadata, with YouTube video thumbnails and backend-proxied raster images. Loading is lazy; unavailable previews keep the original URL/host/path card. See [link previews](../link-previews.md).
 - Voice: custom play/pause/seek controls, duration and a waveform decoded from the recording after loading. Unloaded audio uses flat neutral bars. Existing real recording/preview/cancel/upload behavior remains intact.
 - Threads: a focused drawer with persisted replies, earlier-reply pagination and the same real reaction/save actions. Saved and Inbox are separate functional pages, not mock navigation.
 

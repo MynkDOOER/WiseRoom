@@ -9,6 +9,10 @@ import {
 } from "../controllers/messageController.js";
 
 import { sendVoice, getVoice } from "../controllers/voiceController.js";
+import {
+  linkPreview,
+  linkImage,
+} from "../controllers/linkPreviewController.js";
 
 // roomId comes from the path used to mount this router in server.js.
 const router = express.Router({ mergeParams: true });
@@ -20,6 +24,8 @@ router.post(
   sendVoice,
 );
 router.get("/:messageId/voice", getVoice);
+router.get("/:messageId/link-preview", linkPreview);
+router.get("/:messageId/link-image", linkImage);
 router.post("/", sendMessage);
 router.post("/deleted", deletedMessages);
 router.post("/sync", syncMessages);

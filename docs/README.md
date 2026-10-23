@@ -10,6 +10,7 @@ The [project README](../README.md) covers the product vision, setup, progress, s
 | [Implementation](implementation.md) | Implemented features, migrations and historical verification records |
 | [Design](design.md) | Shared palette, typography, logo and layout conventions |
 | [Realtime](realtime.md) | Beginner Socket.IO walkthrough, events, authentication and reconnect catch-up |
+| [Link previews](link-previews.md) | Thumbnails, metadata, caching and outbound request limits |
 | [UI kit](ui/ui-kit.md) | Shared components, tokens and interaction requirements |
 | [Frontend design](ui/frontend-design.md) | Screen patterns and source-file responsibilities |
 | [Member controls](ui/members.md) | Avatar stack, member details and historical verification |

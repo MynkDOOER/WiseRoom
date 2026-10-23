@@ -42,6 +42,10 @@ HTTP APIs save data; Socket.IO sends identifiers-only notifications after succes
 
 Reconnect/focus synchronization and a shared 60-second fallback recover persisted changes. Presence and typing are temporary process-local state. This implementation targets one backend instance and does not provide a durable event outbox. See [the realtime guide](realtime.md) for the event map, recovery details and verification limits.
 
+## Link previews
+
+Authenticated, message-scoped endpoints resolve page metadata and proxy bounded raster thumbnails. Public-address validation and pinned DNS protect outbound requests; image decoding, lazy loading and bounded process-local caches keep cards compact. Preview availability is optional and does not change message persistence. See [link previews](link-previews.md).
+
 ## Planned RAG pipeline
 
 The remaining pipeline will carry room permissions through document upload, extraction, chunking, embeddings, vector retrieval, `@wise` generation and citations. The current repository does not yet implement that processing pipeline.

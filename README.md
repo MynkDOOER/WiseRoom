@@ -113,6 +113,7 @@ The following capabilities are implemented in the current collaboration foundati
 - **Member-only reading and sending**, with backend membership checks.
 - **Voice messages** with microphone recording, preview, cancellation, upload, and playback.
 - **Code snippets** with syntax highlighting and a copy action.
+- **Link previews** with YouTube thumbnails, Open Graph/Twitter page metadata, cached image delivery, and a readable fallback for unavailable images. [How previews work](docs/link-previews.md).
 - **Emoji/expression insertion**, message reactions, and threaded replies.
 - **Saved messages**, pinned rooms, unread counts, and an activity Inbox.
 - **Online presence and typing indicators**, plus Socket.IO updates for messages, threads, reactions, room changes and invitations, with authenticated API catch-up.

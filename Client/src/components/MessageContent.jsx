@@ -2,7 +2,7 @@ import MessageLinks from "./MessageLinks";
 import { lazy, Suspense } from "react";
 const CodeNote = lazy(() => import("./CodeNote"));
 // Ordinary text remains escaped by React. Only syntax-highlighter output is rendered as HTML.
-export default function MessageContent({ body }) {
+export default function MessageContent({ body, roomId, messageId }) {
   return (
     <div className="message-body">
       {body.split(/(```[\s\S]*?```)/g).map((part, index) => {
@@ -27,7 +27,7 @@ export default function MessageContent({ body }) {
           </span>
         ) : null;
       })}
-      <MessageLinks text={body} />
+      <MessageLinks text={body} roomId={roomId} messageId={messageId} />
     </div>
   );
 }
