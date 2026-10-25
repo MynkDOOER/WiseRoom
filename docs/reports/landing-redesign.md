@@ -8,13 +8,13 @@ The user's WiseRoom Genspark landing page and seven screenshots supplied on Octo
 
 ## Implemented
 
-- Public `/` landing: floating pill navigation, grid and warm glow, outlined hero word, orange conversation headline, the original animated artwork shared through `WiseRoomLogo.jsx`, two hero actions, three-column illustrative room preview, marquee, four animated pipeline stages, feature grid, account entry, and oversized outlined footer wordmark.
+- Public `/` landing: floating pill navigation, grid and warm glow, outlined hero word, orange conversation headline, the original animated artwork shared through `WiseRoomLogo.jsx`, two hero actions, three-column illustrative room preview, marquee, four animated onboarding stages, feature grid, account entry, and oversized outlined footer wordmark.
 - Fonts: Bricolage Grotesque display, Hanken Grotesk interface/body, JetBrains Mono labels/code. Main colors: `#0F0C11`, `#151118`, `#1A161D`, `#F4EDE6`, `#B9AFA8`, `#FF5A1F`.
-- Preview room buttons change the illustrative conversation; source buttons highlight the corresponding example document. The preview is isolated from real rooms/data and labeled as an AI feature preview. There is no fake AI endpoint, indexing, upload, or database data.
+- Preview room buttons change the illustrative chat conversation. A member panel shows example participants. The preview is isolated from real rooms and labeled as illustrative; it does not write database records.
 - The account section mounts actual Clerk SignIn with shared padded fields, full-width social buttons, an orange Continue action, and isolated styles for signed-out users. Signed-in users see an action into their real workspace.
 - Signed-in dashboard is now `/workspace`. Sidebar Home, room error/back links, leave-room redirect, and default auth return paths point there. Six-character invite return paths remain allowed. Existing room/inbox/thread/saved/join URLs stay unchanged.
 - Workspace, dialogs, composer, sidebar branding, and authentication screens share the new warm orange/ivory language. Existing data and backend behavior are retained; Socket.IO was not introduced.
-- Small screens have a compact navigation bar, scaled hero, single-column preview/pipeline/features, and stacked account section. Scroll reveal effects clean up on unmount. Reduced-motion preferences settle content without entrance animation; the marquee has a pause control.
+- Small screens have a compact navigation bar, scaled hero, single-column preview/walkthrough/features, and stacked account section. Scroll reveal effects clean up on unmount. Reduced-motion preferences settle content without entrance animation; the marquee has a pause control.
 
 ## Main implementation files
 
@@ -33,8 +33,8 @@ The user's WiseRoom Genspark landing page and seven screenshots supplied on Octo
 ## Landing verification (historical milestone results)
 
 - ESLint and production build.
-- Desktop browser comparison with the live source at 1280px: exact font families, hero font sizing/spacing, background, navbar, pipeline illustration geometry, and feature layout.
-- Preview room switching and corresponding document highlight.
+- Desktop browser comparison with the live source at 1280px: exact font families, hero font sizing/spacing, background, navbar, walkthrough layout, and feature layout.
+- Preview room switching and corresponding illustrative conversation.
 - Mobile browser at 390 × 844: hero, preview, no horizontal overflow, account entry into `/workspace`, real navigation drawer, and existing Design studio room/history/composer.
 - Existing real authentication was used to reach the workspace; no new sign-in credentials were entered and no new messages or rooms were created for this change.
 - Automated tests were not run for this visual update.
@@ -43,6 +43,6 @@ The user's WiseRoom Genspark landing page and seven screenshots supplied on Octo
 
 - Clerk remains a real component, so enabled providers, account state, and error/verification steps depend on the configured Clerk application. The static reference's painted sign-in form was not retained.
 - Signed-in visitors receive a workspace-entry card in the account section.
-- AI document conversations are explicitly labeled as a preview. Document ingestion/retrieval/AI answers are not implemented by this frontend redesign.
+- The landing preview shows illustrative multi-room chat conversations. Actual room participation starts through the authenticated workspace.
 - Footer links use the actual repository/commit history/issue page instead of `#` placeholders. Security navigation targets the privacy feature card.
 - Mobile and accessibility adaptations include reduced motion, visible focus states, and a marquee pause button.

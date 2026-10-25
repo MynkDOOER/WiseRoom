@@ -2,17 +2,16 @@
   <img src="Client/public/favicon.svg" alt="WiseRoom orange and ivory conversation logo" width="76" height="76" />
 </p>
 
-<h1 align="center">WiseRoom — AI Collaboration Workspace with Room-Scoped RAG</h1>
+<h1 align="center">WiseRoom — Real-Time Multi-Room Chat</h1>
 
 <p align="center"><strong>A shared space. A clearer mind.</strong></p>
 
 <p align="center">
-  Multiplayer conversations and document-grounded AI, organized around your team's rooms.<br />
-  Building a retrieval-augmented generation pipeline on a React, Node.js, Neon PostgreSQL, Prisma, and Clerk foundation.
+  Private chat rooms for teams, study groups, and communities.<br />
+  Real-time messaging with React, Socket.IO, Node.js, Neon PostgreSQL, Prisma, and Clerk.
 </p>
 
 <p align="center">
-  <a href="#rag-pipeline">RAG pipeline</a> ·
   <a href="#project-progress">Progress</a> ·
   <a href="#screenshots">Screenshots</a> ·
   <a href="#features">Features</a> ·
@@ -24,58 +23,20 @@
 
 ---
 
-WiseRoom is being built as an **AI-powered collaboration platform with room-scoped retrieval-augmented generation (RAG)**. Each room brings together a team's people, conversations, and documents. The goal is to let members ask `@wise` a question and receive an answer grounded in that room's uploaded knowledge, with citations back to the source.
+WiseRoom is a **real-time multi-room chat application** for teams, study groups, and communities. Create private rooms, invite your people, and keep each conversation in its own space.
 
-The working foundation already supports authentication, private rooms, owner-approved access, persistent messaging, voice notes, and collaboration tools. The remaining milestones build the document ingestion, embeddings, retrieval, and grounded-answer pipeline on top of that foundation.
+Text, voice notes, code snippets, link previews, threaded replies, reactions, and saved messages make it easy to share ideas and return to the details later. Room owners control invitations, approve requests, manage members, transfer ownership, and delete rooms.
 
-**Development status:** Active development. The collaboration foundation is implemented; document ingestion and RAG question answering are remaining milestones. The landing page demonstrates the intended AI experience.
+**Development status:** Active development. Authentication, persistent messaging, room management, collaboration tools, and Socket.IO live updates are implemented. Hosted deployment and multi-instance scaling remain delivery work.
 
-## The product vision
+## How it works
 
-For project teams, study groups, research collaborators, and communities, useful knowledge is spread across discussions and documents. WiseRoom's intended workflow keeps that context inside a shared room:
+1. **Create a room:** sign in and make a private space for your group.
+2. **Invite your people:** share an invitation link or code and approve join requests.
+3. **Chat together:** send text, voice notes, code, and links with live updates.
+4. **Keep your place:** use threads, saved messages, pinned rooms, and unread activity.
 
-1. **Bring your people:** create a private room and approve who joins.
-2. **Build shared context:** discuss ideas and upload the room's source documents.
-3. **Ask together:** mention `@wise` in the conversation with a question.
-4. **Retrieve relevant evidence:** find passages from documents belonging to that room.
-5. **Answer with sources:** generate a contextual response that the room can check against its documents.
-
-Room membership is the access boundary for conversations today and will also govern document access and retrieval in the RAG milestones.
-
-## RAG pipeline
-
-**Target architecture for the remaining milestones.** The pipeline has two connected paths: preparing room knowledge and answering a member's question.
-
-```mermaid
-flowchart TB
-  subgraph Ingestion[Document ingestion and indexing]
-    A[Authorized room document upload] --> B[Extract text and source metadata]
-    B --> C[Split into retrievable chunks]
-    C --> D[Generate embeddings]
-    D --> E[Room-scoped vector index]
-  end
-  subgraph Answering[Grounded question answering]
-    F[Member asks @wise] --> G[Verify current room membership]
-    G --> H[Embed question and retrieve room passages]
-    H --> I[Assemble question, context, and source references]
-    I --> J[Generate answer with an LLM]
-    J --> K[Return answer and document citations to the room]
-  end
-  E --> H
-```
-
-| Pipeline stage | Intended responsibility |
-| --- | --- |
-| Document ingestion | Accept authorized room uploads and track processing state. |
-| Text extraction | Read document content while retaining source/page/section metadata where available. |
-| Chunking | Split content into useful passages that can be retrieved with their surrounding meaning. |
-| Embeddings and indexing | Generate vectors and associate each indexed chunk with its room and source document. |
-| Retrieval | Search the current room's indexed knowledge for passages relevant to the question. |
-| Context assembly | Build bounded model context from retrieved evidence and the question. |
-| Answer generation | Produce a grounded response and handle missing or insufficient supporting evidence. |
-| Citations | Link the answer back to the source passages so members can inspect the evidence. |
-
-The remaining implementation must carry room permissions through upload, indexing, retrieval, and citation access. Processing failures, document changes/removal, and retrieval quality also belong to these milestones. The current repository does not yet configure an embedding model, vector store, or LLM provider.
+Current room membership is the access boundary for reading messages and participating in conversations.
 
 ## Project progress
 
@@ -86,16 +47,12 @@ The remaining implementation must carry room permissions through upload, indexin
 | Persistent messaging | Implemented | Member-only text/voice messages, cursor history, and code rendering. |
 | Collaboration | Implemented | Threads, reactions, saved messages, pins, unread activity, presence, and typing with Socket.IO live updates. |
 | Application experience | Implemented | Responsive workspace, authentication screens, shared design system, and message timeline. |
-| Document ingestion | Remaining | Authorized uploads, text extraction, metadata, and processing lifecycle. |
-| RAG indexing and retrieval | Remaining | Chunking, embeddings, vector indexing, and room-scoped semantic retrieval. |
-| Grounded AI conversations | Remaining | `@wise` question flow, context assembly, answer generation, and source citations. |
-| RAG validation and deployment | Remaining | Permission/isolation checks, retrieval/answer evaluation, durable storage, and hosted configuration. |
 
-The shared interface supports both collaborative conversations and the upcoming document-grounded AI workflow.
+The shared interface keeps room navigation, conversations, member controls, and activity consistent across desktop and mobile.
 
 ## Features
 
-The following capabilities are implemented in the current collaboration foundation. The RAG capabilities above describe the remaining product milestones.
+The following capabilities are implemented in the multi-room chat application.
 
 ### Authentication and room access
 
@@ -161,7 +118,7 @@ The mobile room view retains chat history, the timeline, owner invitation contro
 
 </details>
 
-Screenshots use development rooms. Example AI/document content appears only in the labeled landing-page preview.
+Workspace screenshots use development rooms. The public landing preview shows illustrative chat conversations.
 
 ## Tech stack
 
@@ -177,8 +134,6 @@ Screenshots use development rooms. Example AI/document content appears only in t
 | Image processing | Sharp |
 | Media storage | Local filesystem for room pictures and voice recordings |
 | Tests | Node.js test runner; ESLint for frontend linting |
-
-The RAG layer will add document processing, embedding generation, vector retrieval, model integration, and source citation handling. Those integrations are not installed or wired into the current application yet.
 
 **Live update implementation:** Socket.IO 4 sends authenticated, scoped notifications for messages, collaboration, room management and invitations. HTTP APIs persist data and reconcile missed updates after reconnect/focus, with a shared 60-second fallback. Presence is process-local; persistent records remain in PostgreSQL. See [the realtime walkthrough](docs/realtime.md).
 
@@ -365,31 +320,20 @@ Run these from their respective directories:
 - **Media is local:** room pictures and voice recordings live under `Server/data/avatars` and `Server/data/voice`. Their files are not stored in Neon or committed to Git. A hosted deployment needs durable media storage.
 - **Realtime targets one backend instance:** multiple instances require a shared Socket.IO adapter and shared presence. Notifications are not a durable event log; API reconciliation recovers persisted state.
 - **Search/timeline cover loaded history:** older pages become available through message pagination; this is not full-database message search.
-- **AI/document features are a preview:** no document indexing, embeddings, retrieval-augmented generation, or `@wise` answers are implemented yet.
 - **Deployment needs environment-specific configuration:** use production Clerk configuration, the deployed API URL, and the appropriate frontend CORS origin.
 
 ## Roadmap
 
-### Implemented foundation
+### Implemented chat features
 
 - [x] Clerk authentication and database user synchronization
 - [x] Rooms, memberships, invitation links, and owner-approved access
-- [x] Persistent, paginated text messaging
+- [x] Persistent, paginated text messaging and author message deletion
+- [x] Owner transfer and owner-only room deletion
+- [x] Link previews with cached thumbnails
 - [x] Room picture uploads and voice messages
 - [x] Threads, reactions, saved messages, room pins, and unread activity
 - [x] Responsive shared design system and interactive message timeline
-
-### Remaining RAG milestones
-
-- [ ] Build room-authorized document upload and processing records
-- [ ] Extract text and preserve source metadata for citations
-- [ ] Implement chunking and embedding generation
-- [ ] Store/index document vectors with room and document boundaries
-- [ ] Retrieve relevant passages for a member's question
-- [ ] Assemble evidence-backed context and integrate the answer model
-- [ ] Connect `@wise` questions and cited answers to the room conversation
-- [ ] Handle processing failures, document removal/re-indexing, and unsupported questions
-- [ ] Evaluate retrieval relevance, grounded answers, citations, and cross-room isolation
 
 ### Delivery and scaling
 

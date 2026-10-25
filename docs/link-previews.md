@@ -16,6 +16,6 @@ Chat, thread, saved-message and activity cards can show a website image alongsid
 - Website requests carry no user token, cookies or authorization header. Browsers do not contact third-party preview image hosts directly.
 - Bounded timeouts, redirects, response sizes, decoded image pixels, concurrency, queue size and authenticated request rates constrain remote work. SVG/HTML images and compressed HTTP bodies are rejected. Animated raster images use their first frame.
 - Process-local caches hold up to 256 metadata entries (15 minutes) and 64 image entries (10 minutes, 16 MB total). Failures cache for one minute. Caches reset on server restart and are not shared between backend instances.
-- Some sites block automated requests, omit metadata, require login, or publish unsupported images. Those links still work, but cannot be guaranteed a thumbnail. The image proxy is not a general document uploader or part of the planned RAG pipeline.
+- Some sites block automated requests, omit metadata, require login, or publish unsupported images. Those links still work, but cannot be guaranteed a thumbnail. The image proxy only serves thumbnails for links in accessible messages.
 
 Implementation: `Server/utils/publicHttp.js`, `Server/services/linkPreviewService.js`, `Server/controllers/linkPreviewController.js`, `Client/src/api/linkPreviews.js`, and `Client/src/components/MessageLinks.jsx`.

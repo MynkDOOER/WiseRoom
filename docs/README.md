@@ -1,12 +1,12 @@
 # WiseRoom documentation
 
-The [project README](../README.md) covers the product vision, setup, progress, screenshots and remaining RAG milestones. This folder contains detailed guides and implementation records.
+The [project README](../README.md) covers the product vision, setup, progress, screenshots and deployment roadmap. This folder contains detailed guides and implementation records.
 
 ## Current guides
 
 | Guide | What it covers |
 | --- | --- |
-| [Architecture](architecture.md) | Frontend/backend boundaries, persistence, permissions and the planned RAG pipeline |
+| [Architecture](architecture.md) | Frontend/backend boundaries, persistence, permissions and real-time chat delivery |
 | [Implementation](implementation.md) | Implemented features, migrations and historical verification records |
 | [Design](design.md) | Shared palette, typography, logo and layout conventions |
 | [Realtime](realtime.md) | Beginner Socket.IO walkthrough, events, authentication and reconnect catch-up |

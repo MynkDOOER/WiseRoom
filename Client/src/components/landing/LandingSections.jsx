@@ -13,82 +13,50 @@ const scripts = {
   "launch-plan": [
     {
       user: "AR",
-      text: <>Okay who remembers what we decided for student pricing? 😅</>,
+      text: "The launch page is ready. Can we do one last review?",
+    },
+    { user: "JL", text: "On it! The mobile layout looks great 🙌" },
+    {
+      user: "MK",
+      text: "I’ll check the sign-up flow. Let’s keep feedback in this thread.",
+    },
+    { user: "SN", text: "All clear from me. Ready when you are 🚀" },
+  ],
+  research: [
+    {
+      user: "SN",
+      text: "Anyone free to compare interview notes this afternoon?",
+    },
+    {
+      user: "AR",
+      text: "I can join at 3. There were some useful patterns in the last session.",
     },
     {
       user: "JL",
-      text: (
-        <>
-          It was in the brief somewhere… <span className="at">@wise</span> can
-          you check?
-        </>
-      ),
+      text: "Same here. I saved the discussion so we can pick up where we left off.",
     },
-    {
-      ai: true,
-      docs: [1, 2],
-      text: (
-        <>
-          Student pricing was set at <b>₹199/month</b>{" "}
-          <sup className="cite">1</sup>, about 40% below the standard plan,
-          based on the survey showing most students cap spend under ₹250{" "}
-          <sup className="cite">2</sup>.
-        </>
-      ),
-      sources: ["Q3 Launch Brief · p.12", "Pricing research · p.3"],
-    },
-    { user: "SN", text: <>Perfect, adding that to the landing copy now 🙌</> },
-  ],
-  research: [
-    { user: "SN", text: <>How many beta signups came from colleges?</> },
-    {
-      ai: true,
-      docs: [3],
-      text: (
-        <>
-          <b>812 of 1,240</b> signups used a college email domain — roughly 65%{" "}
-          <sup className="cite">1</sup>.
-        </>
-      ),
-      sources: ["beta-signups.csv · rows 1–1240"],
-    },
-    { user: "MK", text: <>That’s way more than I expected</> },
   ],
   "thesis-group": [
+    { user: "MK", text: "Quick check-in: how is chapter 3 going?" },
     {
-      user: "MK",
-      text: (
-        <>
-          <span className="at">@wise</span> what did we assign for chapter 3?
-        </>
-      ),
+      user: "AR",
+      text: "Literature review is done. Jun, want to take the next section?",
     },
-    {
-      ai: true,
-      docs: [4],
-      text: (
-        <>
-          Arya owns the literature review, Jun drafts the methodology, and the
-          first draft is due <b>Nov 4</b> <sup className="cite">1</sup>.
-        </>
-      ),
-      sources: ["Meeting notes — Sep 30"],
-    },
+    { user: "JL", text: "Yes! I’ll share an update here after class." },
+    { user: "SN", text: "Perfect. See you both at the study session 📚" },
   ],
   "design-crit": [
-    { user: "JL", text: <>Homepage v2 is up, roast it 🔥</> },
-    { user: "AR", text: <>The hero finally feels alive. Type is 🔥</> },
-    { user: "SN", text: <>Ship it.</> },
+    { user: "JL", text: "Homepage v2 is up, roast it 🔥" },
+    { user: "AR", text: "The hero finally feels alive. Type is 🔥" },
+    {
+      user: "MK",
+      text: "Saved this. Let’s try a little more space around the buttons.",
+    },
+    { user: "SN", text: "That feels right. Ship it." },
   ],
 };
-const documents = [
-  ["PDF", "Q3 Launch Brief.pdf", "24 pages · indexed"],
-  ["DOC", "Pricing research notes", "8 pages · indexed"],
-  ["CSV", "beta-signups.csv", "1,240 rows · indexed"],
-  ["MD", "Meeting notes — Sep 30", "3 pages · indexed"],
-];
 
-function DemoConversation({ name, onSource }) {
+function DemoConversation({ name }) {
   const messages = scripts[name];
   const [visible, setVisible] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -104,55 +72,31 @@ function DemoConversation({ name, onSource }) {
   }, [messages]);
   return (
     <div className="msgs" aria-label={`Illustrative ${name} conversation`}>
-      {messages.slice(0, visible).map((message, index) => {
-        const person = message.ai ? ["Wise", "#ff5a1f"] : people[message.user];
-        return (
-          <div className={`m in ${message.ai ? "ai" : ""}`} key={index}>
-            <span className="av" style={{ background: person[1] }}>
-              {message.ai ? "W" : message.user}
-            </span>
-            <div className="body">
-              <div className="who">
-                {person[0]} <time>just now</time>
-              </div>
-              <div className={message.ai ? "bubble" : undefined}>
-                <div className="txt">{message.text}</div>
-                {message.sources && (
-                  <div className="srcs">
-                    {message.sources.map((source, i) => (
-                      <button
-                        key={source}
-                        className="src"
-                        onClick={() => onSource(message.docs[i])}
-                        title={`Highlight ${source}`}
-                      >
-                        <i>[{i + 1}]</i>
-                        {source}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+      {messages.slice(0, visible).map((message, index) => (
+        <div className="m in" key={index}>
+          <span className="av" style={{ background: people[message.user][1] }}>
+            {message.user}
+          </span>
+          <div className="body">
+            <div className="who">
+              {people[message.user][0]} <time>just now</time>
             </div>
+            <div className="txt">{message.text}</div>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
 
 export function LandingDemo() {
   const [room, setRoom] = useState("launch-plan");
-  const [source, setSource] = useState(null);
-  const highlighted = source
-    ? [source]
-    : scripts[room].find((message) => message.ai)?.docs || [];
   return (
     <>
       <div
         className="demo fade-in"
         style={{ animationDelay: "1s" }}
-        aria-label="Interactive product preview"
+        aria-label="Interactive chat preview"
       >
         <aside className="side" aria-label="Preview rooms">
           <div className="mono">Rooms</div>
@@ -162,10 +106,7 @@ export function LandingDemo() {
               key={name}
               className={`room ${room === name ? "on" : index === 1 ? "unread" : ""}`}
               aria-pressed={room === name}
-              onClick={() => {
-                setRoom(name);
-                setSource(null);
-              }}
+              onClick={() => setRoom(name)}
             >
               <span className="hash">#</span>
               {name}
@@ -173,7 +114,7 @@ export function LandingDemo() {
             </button>
           ))}
           <div className="you">
-            <span className="av" style={{ background: "#fbefe2" }}>
+            <span className="av" style={{ background: people.MK[1] }}>
               MK
             </span>
             Mayank · online
@@ -186,57 +127,43 @@ export function LandingDemo() {
               <span className="demo-room-name">{room}</span>
             </div>
             <span className="mono" style={{ fontSize: 10 }}>
-              4 docs indexed
+              4 members
             </span>
             <div className="presence" aria-label="Example participants">
-              {["AR", "JL", "SN"].map((id) => (
-                <span
-                  key={id}
-                  className="av"
-                  style={{ background: people[id][1] }}
-                >
+              {Object.entries(people).map(([id, person]) => (
+                <span key={id} className="av" style={{ background: person[1] }}>
                   {id}
                 </span>
               ))}
-              <span
-                className="av"
-                style={{ background: "#ff5a1f", borderRadius: 8 }}
-              >
-                W
-              </span>
             </div>
           </div>
-          <DemoConversation key={room} name={room} onSource={setSource} />
+          <DemoConversation key={room} name={room} />
           <a href="#start" className="composer">
-            <span style={{ color: "var(--orange)", fontFamily: "var(--mono)" }}>
-              @wise
-            </span>
-            ask anything about this room’s docs… <span className="k">⏎</span>
+            Message #{room}… <span className="k">⏎</span>
           </a>
         </div>
-        <aside className="docs" aria-label="Example room knowledge">
-          <div className="mono" style={{ padding: "0 2px 6px" }}>
-            Room knowledge
-          </div>
-          {documents.map(([type, name, detail], index) => (
-            <div
-              key={name}
-              className={`doc ${highlighted.includes(index + 1) ? "hit" : ""}`}
-            >
-              <div className="ic">
-                <b>{type}</b>
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div className="n">{name}</div>
-                <div className="s">{detail}</div>
+        <aside className="demo-people" aria-label="Example room members">
+          <div className="mono">Room people</div>
+          {Object.entries(people).map(([id, person]) => (
+            <div className="demo-person" key={id}>
+              <span className="av" style={{ background: person[1] }}>
+                {id}
+              </span>
+              <div>
+                <strong>{person[0]}</strong>
+                <small>{id === "MK" ? "Room owner" : "Member"} · online</small>
               </div>
             </div>
           ))}
-          <div className="drop">Drop files to teach this room</div>
+          <div className="demo-foot">
+            A private space for your people.
+            <br />
+            <a href="#start">Start your own room →</a>
+          </div>
         </aside>
       </div>
       <p className="preview-caption">
-        Interactive preview · AI document answers are coming to WiseRoom.
+        Illustrative conversations · Sign in to create your own rooms.
       </p>
     </>
   );
@@ -306,51 +233,37 @@ export function LandingMarquee() {
   );
 }
 
-export function ChunkVisualization() {
+export function ChatStepVisual({ kind }) {
   return (
-    <div className="viz v2" aria-hidden="true">
-      {Array.from({ length: 30 }, (_, i) => (
-        <i
-          key={i}
-          className="k"
-          style={{
-            "--d": `${0.5 + i * 0.03}s`,
-            gridColumn: i % 7 === 3 ? "span 2" : undefined,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-const points = [
-  [12, 20],
-  [24, 70],
-  [38, 30],
-  [46, 58],
-  [58, 36],
-  [62, 22],
-  [70, 64],
-  [82, 30],
-  [88, 74],
-  [30, 48],
-  [52, 80],
-  [76, 48],
-  [18, 86],
-  [92, 12],
-  [44, 14],
-];
-export function RetrievalVisualization() {
-  return (
-    <div className="viz v3" aria-hidden="true">
-      <div className="ring" />
-      <div className="q" />
-      {points.map(([x, y], i) => (
-        <span
-          key={i}
-          className={`pt ${Math.hypot(x - 52, (y - 42) * 0.6) < 16 ? "nn" : ""}`}
-          style={{ left: `${x}%`, top: `${y}%` }}
-        />
-      ))}
+    <div className={`chat-step-visual step-${kind}`} aria-hidden="true">
+      {kind === "rooms" && (
+        <>
+          <span># launch-plan</span>
+          <span># study-group</span>
+          <span className="accent">+ Create room</span>
+        </>
+      )}
+      {kind === "invite" && (
+        <>
+          <small>YOUR INVITATION</small>
+          <strong>ROOM42</strong>
+          <span className="accent">Approve request ✓</span>
+        </>
+      )}
+      {kind === "chat" && (
+        <>
+          <span>Ready for the review?</span>
+          <span className="accent">Let’s do it 🙌</span>
+          <small>Jun is typing…</small>
+        </>
+      )}
+      {kind === "saved" && (
+        <>
+          <span>3 replies in launch-plan</span>
+          <span className="accent">Message saved ✓</span>
+          <small>You’re all caught up.</small>
+        </>
+      )}
     </div>
   );
 }

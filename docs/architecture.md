@@ -1,6 +1,6 @@
 # WiseRoom architecture
 
-WiseRoom is an AI collaboration workspace with persistent private rooms and Socket.IO live updates. Document ingestion and room-scoped retrieval-augmented generation (RAG) remain upcoming milestones; the public AI preview illustrates that planned workflow.
+WiseRoom is a real-time multi-room chat application with persistent private conversations, membership controls, and Socket.IO live updates.
 
 ## Current system
 
@@ -45,12 +45,6 @@ Reconnect/focus synchronization and a shared 60-second fallback recover persiste
 ## Link previews
 
 Authenticated, message-scoped endpoints resolve page metadata and proxy bounded raster thumbnails. Public-address validation and pinned DNS protect outbound requests; image decoding, lazy loading and bounded process-local caches keep cards compact. Preview availability is optional and does not change message persistence. See [link previews](link-previews.md).
-
-## Planned RAG pipeline
-
-The remaining pipeline will carry room permissions through document upload, extraction, chunking, embeddings, vector retrieval, `@wise` generation and citations. The current repository does not yet implement that processing pipeline.
-
-See the [RAG pipeline](../README.md#rag-pipeline) and [remaining milestones](../README.md#remaining-rag-milestones) for the intended architecture and scope.
 
 ## Related guides
 

@@ -14,7 +14,7 @@ The public homepage is the visual source of truth for all frontend screens. This
 
 ## Screen patterns
 
-- `/`: pill navigation, editorial hero, grid/glow, illustrative product preview, RAG pipeline illustration, feature grid, real Clerk account entry, outlined footer wordmark.
+- `/`: pill navigation, editorial hero, grid/glow, illustrative product preview, chat onboarding walkthrough, feature grid, real Clerk account entry, outlined footer wordmark.
 - `/workspace`: real room directory, unread/request summary, create/join actions, activity column.
 - Navigation: remembered 200–320px desktop sidebar resizing/collapse; mobile drawer; actual-room picker with existing search/paging/keyboard controls.
 - `/rooms/:roomId`: shared compact header and owner-only Invite, framed chronological conversation, grouped author rows, code/voice content, reactions/threads, and a compact single-row composer.
@@ -36,7 +36,7 @@ The public homepage is the visual source of truth for all frontend screens. This
 | `src/components/RoomContextPanel.jsx` | Real room members and details |
 | `src/Pages/RoomPage.jsx` | Existing room state, ownership controls, and contextual views |
 
-Preserve authentication, room/member permissions, existing URLs, API integrations, voice recording, code rendering, saved messages, threads, and message pagination. The document/RAG experience remains an upcoming product milestone; the public preview is labeled.
+Preserve authentication, room/member permissions, existing URLs, API integrations, voice recording, code rendering, saved messages, threads, and message pagination. The public chat preview is illustrative; authenticated workspace content uses actual records.
 
 ## Verification record
 
@@ -44,4 +44,4 @@ The initial shared-header work on October 19 recorded frontend lint/build (99 mo
 
 Subsequent collaboration work recorded 15 frontend and 82 backend tests; see [collaboration-reference.md](../reports/collaboration-reference.md). Current landing/auth/interior updates passed lint/build and browser inspection of desktop/mobile layouts, actual Clerk cards, owner Invite, member management, timeline navigation, and scroll anchoring. Automated tests were not rerun for those visual-only updates; the historical counts are not new test runs.
 
-See [landing-redesign.md](../reports/landing-redesign.md) and [interior-consistency.md](../reports/interior-consistency.md) for those implementation records. [README.md](../../README.md) tracks the full product scope and remaining RAG work.
+See [landing-redesign.md](../reports/landing-redesign.md) and [interior-consistency.md](../reports/interior-consistency.md) for those implementation records. [README.md](../../README.md) tracks the multi-room chat scope and delivery roadmap.

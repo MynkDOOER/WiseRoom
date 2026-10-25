@@ -4,7 +4,7 @@
 
 The public homepage is the visual source of truth: warm charcoal surfaces, ivory text, orange actions, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata. All brand placements share the original animated logo. Chat uses a framed conversation, compact single-row composer, real member context, and an interactive timeline.
 
-See [design.md](design.md) and [ui-kit.md](ui/ui-kit.md). The collaboration foundation supports the remaining document ingestion, embedding, retrieval, and cited-answer milestones in [README.md](../README.md).
+See [design.md](design.md) and [ui-kit.md](ui/ui-kit.md). The implemented multi-room chat features and delivery roadmap are listed in [README.md](../README.md).
 
 ## Room-management foundation
 
@@ -21,7 +21,7 @@ Applied to `C:\Users\mayan\Downloads\WORKSPACE\WiseRoom` with the approved room-
 - Existing members follow the link directly into the room. Removed members require a new approved request.
 - Safe sign-in/sign-up return paths preserve valid invitations.
 
-Message/activity/presence/typing updates now use Socket.IO notifications with authenticated API reconciliation; manual refresh/retry remains available. HTTP persistence, cursor pagination, and membership checks are preserved. The public AI/document preview is labeled; live rooms use actual records.
+Message/activity/presence/typing updates now use Socket.IO notifications with authenticated API reconciliation; manual refresh/retry remains available. HTTP persistence, cursor pagination, and membership checks are preserved. The public chat preview is illustrative; live rooms use actual records.
 
 ## Database / compatibility
 
@@ -86,7 +86,7 @@ Only Sharp was added as a feature dependency, at the patched `^0.35.5` release. 
 
 - The room-management verification run used one real signed-in account. Live two-account request/approval/decline/removal was not exercised; authorization/state changes are covered by isolated HTTP tests with mocked authentication/database. Do not describe those tests as live multi-user verification.
 - Invitation copy uses the browser clipboard API with a visible selectable-link fallback. A previous browser automation clipboard attempt timed out; clipboard completion is not claimed here.
-- Hosted storage/deployment, email notifications, and document/RAG processing remain unimplemented. Current live updates use Socket.IO with API reconciliation.
+- Hosted storage/deployment and email notifications remain unimplemented. Current live updates use Socket.IO with API reconciliation.
 
 ## Ownership and message lifecycle — 2026-10-21
 

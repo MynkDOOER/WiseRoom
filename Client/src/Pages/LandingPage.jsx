@@ -4,8 +4,7 @@ import {
   LandingAccount,
   LandingDemo,
   LandingMarquee,
-  ChunkVisualization,
-  RetrievalVisualization,
+  ChatStepVisual,
 } from "../components/landing/LandingSections";
 
 export default function LandingPage() {
@@ -17,7 +16,7 @@ export default function LandingPage() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(
-              entry.target.classList.contains("pipe") ? "go" : "on",
+              entry.target.classList.contains("chat-steps") ? "go" : "on",
             );
             observer.unobserve(entry.target);
           }
@@ -26,7 +25,7 @@ export default function LandingPage() {
       { threshold: 0.15 },
     );
     page.current
-      .querySelectorAll(".reveal, .pipe")
+      .querySelectorAll(".reveal, .chat-steps")
       .forEach((el) => observer.observe(el));
     return () => {
       observer.disconnect();
@@ -64,7 +63,7 @@ export default function LandingPage() {
         <div className="glow" />
         <div className="wrap" style={{ position: "relative" }}>
           <span className="eyebrow fade-in" style={{ animationDelay: ".1s" }}>
-            <b>NEW</b> Rooms now remember every doc you drop in
+            <b>LIVE</b> Your people. Your rooms. One conversation at a time.
           </span>
           <h1 className="big">
             <span className="word">
@@ -93,9 +92,9 @@ export default function LandingPage() {
           </h1>
           <div className="hero-row fade-in">
             <p>
-              Multiplayer chat rooms with an AI that has{" "}
-              <em>read everything your team has</em> — and cites the page it got
-              the answer from.
+              Private chat rooms for <em>your people and your projects.</em>{" "}
+              Share messages, voice notes, code, and ideas — together in real
+              time.
             </p>
             <div className="cta">
               <a
@@ -126,62 +125,48 @@ export default function LandingPage() {
       <section className="s" id="how" data-screen-label="How it works">
         <div className="wrap">
           <div className="sh reveal">
-            <div className="mono">01 — The pipeline</div>
+            <div className="mono">01 — Make room</div>
             <div>
               <h2>
-                Your files, turned into{" "}
-                <span className="dim">a teammate who never forgets.</span>
+                Your people, together.{" "}
+                <span className="dim">A room for every conversation.</span>
               </h2>
               <p>
-                Every room has its own retrieval pipeline. Drop in a document
-                and WiseRoom reads it, splits it, and indexes it — so answers
-                come from your sources, not guesswork.
+                Start a private room, invite your group, and get talking. Keep
+                each project, class, and side quest in its own space.
               </p>
             </div>
           </div>
-          <div className="pipe" id="pipe">
-            <div className="stage">
-              <div className="num">01</div>
-              <h3>Drop</h3>
-              <p>PDFs, docs, notes, spreadsheets. Drag them into any room.</p>
-              <div className="viz v1">
-                <div className="pg" />
-                <div className="pg" />
-                <div className="pg" />
+          <div className="chat-steps">
+            {[
+              [
+                "Create",
+                "Name your room and make a space for your group.",
+                "rooms",
+              ],
+              [
+                "Invite",
+                "Share a link or code. The owner approves who joins.",
+                "invite",
+              ],
+              [
+                "Chat",
+                "Send messages, voice notes, code, and links in real time.",
+                "chat",
+              ],
+              [
+                "Come back",
+                "Pick up with threads, saved messages, and unread activity.",
+                "saved",
+              ],
+            ].map(([title, description, kind], index) => (
+              <div className="stage" key={kind}>
+                <div className="num">0{index + 1}</div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <ChatStepVisual kind={kind} />
               </div>
-            </div>
-            <div className="stage">
-              <div className="num">02</div>
-              <h3>Chunk</h3>
-              <p>
-                Content is split into passages that keep their meaning intact.
-              </p>
-              <ChunkVisualization />
-            </div>
-            <div className="stage">
-              <div className="num">03</div>
-              <h3>Retrieve</h3>
-              <p>Your question is matched against every passage in the room.</p>
-              <RetrievalVisualization />
-            </div>
-            <div className="stage">
-              <div className="num">04</div>
-              <h3>Answer</h3>
-              <p>A grounded reply, with a citation for every claim.</p>
-              <div className="viz v4">
-                <div className="ln" style={{ "--w": "92%" }} />
-                <div className="ln" style={{ "--w": "78%" }} />
-                <div className="ln" style={{ "--w": "54%" }} />
-                <div className="chips">
-                  <span className="src">
-                    <i>[1]</i> Brief p.12
-                  </span>
-                  <span className="src">
-                    <i>[2]</i> Notes
-                  </span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -209,8 +194,8 @@ export default function LandingPage() {
               </div>
               <h3>A room for every project, class, and side quest.</h3>
               <p>
-                Each room keeps its own people, history, and knowledge — nothing
-                leaks between them.
+                Each room keeps its own people and conversation history, with
+                membership controls for every space.
               </p>
               <div className="rooms-viz">
                 <span>#launch-plan</span>
@@ -259,7 +244,7 @@ export default function LandingPage() {
               <div className="mono" style={{ marginBottom: "18px" }}>
                 Private by default
               </div>
-              <h3>Your docs stay in your room.</h3>
+              <h3>Your conversations stay in your room.</h3>
               <div className="lock">
                 <div>
                   <span>auth</span>
@@ -267,7 +252,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <span>scope</span>
-                  <b>per-room index</b>
+                  <b>room membership</b>
                 </div>
                 <div>
                   <span>access</span>
@@ -277,17 +262,20 @@ export default function LandingPage() {
             </div>
             <div className="card c-d reveal">
               <div className="mono" style={{ marginBottom: "18px" }}>
-                Grounded answers
+                Keep the context
               </div>
-              <h3>Ask @wise. Get receipts.</h3>
+              <h3>Good conversations deserve a follow-up.</h3>
               <p>
-                Every answer points back to the exact passage it came from, so
-                the room can check the work.
+                Reply in threads, react to a great idea, and save messages you
+                want to return to. Keep the details close to the conversation.
               </p>
               <div className="quote-viz" style={{ marginTop: "28px" }}>
-                “Beta pricing was set at <mark>₹199/month for students</mark>{" "}
-                <span className="cite">1</span>, with the waitlist closing{" "}
-                <mark>October 30</mark> <span className="cite">2</span>.”
+                “The new homepage is ready for feedback.”
+                <div className="demo-reactions">
+                  <span>🔥 3</span>
+                  <span>3 replies</span>
+                  <span>Saved ✓</span>
+                </div>
               </div>
             </div>
           </div>
@@ -315,7 +303,7 @@ export default function LandingPage() {
                 <b>02</b>Create a room and invite your people
               </div>
               <div>
-                <b>03</b>Drop your docs and ask @wise anything
+                <b>03</b>Send a message and start the conversation
               </div>
             </div>
           </div>

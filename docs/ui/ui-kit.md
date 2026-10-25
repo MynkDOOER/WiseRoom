@@ -36,7 +36,7 @@ Base tokens/primitives/layout live in `tokens.css`, `ui.css`, and `index.css`. `
 ## Layout and behavior
 
 - Sidebar: search with Ctrl/Cmd+K, Home, Inbox, Threads, Saved, personal pinned rooms, other rooms and account controls. Room names, previews, unread counts and pins come from actual records. The sidebar remains collapsible/resizable (200–320px) and remembers its preference; new installations default to 260px.
-- Public Home (`/`): reference hero, interactive illustrative product preview, animated pipeline, feature grid, real Clerk sign-in and outlined footer wordmark. The AI preview is labeled; it does not write to the database.
+- Public Home (`/`): reference hero, interactive illustrative product preview, animated chat walkthrough, feature grid, real Clerk sign-in and outlined footer wordmark. The chat preview is labeled as illustrative; it does not write to the database.
 - Workspace (`/workspace`): date, personal greeting, true unread summary, create-room action, inline invitation entry, compact room rows with latest message/time, list/grid toggle and a real activity column.
 - Room header: clickable room avatar to switch rooms, room name, actual member/online counts, member stack, search, personal pin and settings controls. Invite is rendered only for `OWNER` and remains visible on narrow screens. Members can still change the room picture; owner-only rename/invitation/member controls remain enforced.
 - Chat: chronological groups with your messages on the right and other members on the left, grouped consecutive messages, inline names/timestamps and quiet unboxed text. Hover or keyboard focus reveals actual reaction/thread/message actions. Touch exposes the actions menu.

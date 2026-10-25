@@ -8,7 +8,7 @@ Current shared design: [design.md](../design.md) and [ui-kit.md](../ui/ui-kit.md
 
 ## What changed
 
-Current Home/sidebar/chat styling uses warm charcoal surfaces, ivory text, orange actions, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata. Conversations use grouped rows, inline timestamps, code cards, voice controls, contextual actions, a timeline rail, and a compact single-row composer. Actual records determine live room content; the public AI preview is labeled separately.
+Current Home/sidebar/chat styling uses warm charcoal surfaces, ivory text, orange actions, Bricolage Grotesque headings, Hanken Grotesk UI/messages, and JetBrains Mono code/metadata. Conversations use grouped rows, inline timestamps, code cards, voice controls, contextual actions, a timeline rail, and a compact single-row composer. Actual records determine live room content; the public chat preview is labeled separately.
 
 Invite is only rendered for the owner, guarded again before the frontend invitation request, and enforced by the existing owner-only backend service. The owner button remains visible at mobile widths.
 

@@ -1,6 +1,6 @@
 # WiseRoom design system
 
-This is the current visual direction for the whole project. The public homepage is the reference for workspace, chat, authentication, dialogs, member controls, and upcoming room-scoped RAG features.
+This is the current visual direction for the whole project. The public homepage is the reference for workspace, chat, authentication, dialogs, and member controls.
 
 ## Palette
 
@@ -20,7 +20,7 @@ Warm charcoal surfaces, ivory text, restrained orange actions, thin warm divider
 | Selection | `--highlight: #FF5A1F1A` |
 | Focus | `--focus: #FF956A` |
 
-Use orange for actions, active navigation, room emphasis, and future AI accents. Pastel avatars distinguish people; body text remains neutral.
+Use orange for actions, active navigation, and room emphasis. Pastel avatars distinguish people; body text remains neutral.
 
 ## Typography and branding
 
@@ -32,7 +32,7 @@ Reuse `Client/src/components/WiseRoomLogo.jsx`. Its original SVG paths, colors, 
 
 ## Layout and behavior
 
-- **Public `/`:** pill navigation, editorial hero, outlined word/orange emphasis, subtle grid/glow, illustrative room preview, pipeline, feature grid, real account entry, and outlined footer wordmark.
+- **Public `/`:** pill navigation, editorial hero, outlined word/orange emphasis, subtle grid/glow, illustrative room preview, chat walkthrough, feature grid, real account entry, and outlined footer wordmark.
 - **Workspace `/workspace`:** personal greeting, real unread/request state, creation/invitation actions, compact room directory, and activity column.
 - **Navigation:** remembered desktop sidebar sizing (200–320px), collapse, mobile drawer, and actual-room switching.
 - **Chat:** framed dark surface, chronological groups with the signed-in user’s messages on the right and others on the left, small pastel avatars, inline author/time rows, code cards, voice controls, reactions, and threads. Deleted messages retain a muted placeholder.
@@ -48,9 +48,9 @@ Reuse `Client/src/components/WiseRoomLogo.jsx`. Its original SVG paths, colors, 
 
 Reuse these shared components/tokens rather than creating separate page themes. Font imports live in `Client/index.html`.
 
-## RAG and real data
+## Preview and real data
 
-Apply this same system to future document ingestion, retrieval, citations, and `@wise` answers. Those RAG milestones remain to implement. The homepage AI/document conversation is labeled as a preview; live workspace content comes from actual records.
+The homepage chat conversations are labeled as illustrative. Signed-in rooms, messages, members, and activity use actual records and authorized APIs. Keep this distinction clear in every screen.
 
 ## Related documentation
 

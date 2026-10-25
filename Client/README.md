@@ -1,8 +1,8 @@
 # WiseRoom frontend
 
-React 19, Vite 8, React Router, and Clerk power WiseRoom's collaboration workspace and the interface for its upcoming room-scoped RAG workflow.
+React 19, Vite 8, React Router, Clerk, and Socket.IO power WiseRoom's real-time multi-room chat interface.
 
-- [Product vision, setup, architecture, progress, and RAG roadmap](../README.md)
+- [Product overview, setup, architecture, progress, and roadmap](../README.md)
 - [Current shared design direction](../docs/design.md)
 - [UI component kit](../docs/ui/ui-kit.md)
 
@@ -37,4 +37,4 @@ Frontend: `http://localhost:5173`. Default API: `http://localhost:3000`.
 
 Public landing: `/`. Authentication: `/sign-in`, `/sign-up`. Signed-in views: `/workspace`, `/rooms/:roomId`, `/inbox`, `/threads`, `/saved`, `/join/:code`. The `/ui-kit` component reference is development-only.
 
-The landing AI/document conversation is illustrative. Document ingestion, embeddings, retrieval, and cited `@wise` answers remain upcoming milestones. Live workspace content comes from actual APIs.
+The landing chat conversations are illustrative. Signed-in rooms, messages, members, and activity come from authenticated APIs and live updates.
